@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@import "@fontsource/inter";
+@import "katex/dist/katex.min.css";
+@import "github-markdown-css/github-markdown.css";
+@import "highlight.js/styles/github-dark.css";
+
+@theme {
+    --color-default-background: #0b1215;
+    --color-default-card: #0b1324;
+    --color-default-border: #1c2742;
+
+    --color-default-primary: #6366f1;
+    --color-default-primary-hover: #818cf8;
+    --color-default-primary-active: #4f46e5;
+
+    --color-default-text: #e5e7eb;
+    --color-default-text-sub: #9ca3af;
+
+    --font-inter: 'Inter', sans-serif;
+}
+
+body {
+    @apply font-inter duration-300 bg-default-background text-default-text;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #1e293b; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+.markdown-body {
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    margin: 0;
+    color: var(--color-default-text);
+    background: var(--color-slate-800);
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+    font-size: 16px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
