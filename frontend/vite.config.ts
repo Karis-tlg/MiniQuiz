@@ -5,4 +5,13 @@ export default defineConfig({
     plugins: [
         tailwindcss(),
     ],
+    build: {
+        rolldownOptions: {
+            input: {
+                auth: 'auth.html',
+                index: 'index.html',
+                editor: 'editor.html'
+            }
+        }
+    }
 })
