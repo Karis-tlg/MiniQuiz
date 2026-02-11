@@ -48,12 +48,12 @@ export class PageIndex extends LitElement {
                     <h2 class="text-3xl font-bold mb-6">Sẵn sàng thử MiniQuiz?</h2>
                     <p class="text-gray-400 mb-10">Bắt đầu tạo quiz đầu tiên của bạn chỉ trong vài phút.</p>
                     <div class="relative group">
-                        <a href="#" class="relative inline-block p-px font-semibold leading-6 text-white bg-gray-800 shadow-2xl cursor-pointer rounded-xl shadow-zinc-900 transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95">
+                        <a href="/auth" class="relative inline-block p-px font-semibold leading-6 text-white bg-gray-800 shadow-2xl cursor-pointer rounded-xl shadow-zinc-900 transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95">
                             <span class="absolute inset-0 rounded-xl bg-linear-to-r from-indigo-400 via-blue-500 to-violet-500 p-0.5 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
                             <span class="relative z-10 block px-6 py-3 rounded-xl bg-gray-950">
                                 <div class="relative z-10 flex items-center space-x-2">
-                                <span class="transition-all duration-500 group-hover:translate-x-1">Bắt đầu ngay</span>
-                                <i class="fa-solid fa-arrow-right transition-transform duration-500 group-hover:translate-x-2"></i>
+                                    <span class="transition-all duration-500 group-hover:translate-x-1">Bắt đầu ngay</span>
+                                    <i class="fa-solid fa-arrow-right transition-transform duration-500 group-hover:translate-x-2"></i>
                                 </div>
                             </span>
                         </a>
@@ -62,6 +62,11 @@ export class PageIndex extends LitElement {
             </section>
 
             <footer class="border-t border-gray-800 py-8 text-center text-sm text-gray-500">
+                <p class="mt-4 text-center">
+                    <a href="/legal" class="text-gray-500 hover:text-gray-200 transition">Terms of Service</a>
+                    <span class="mx-2">·</span>
+                    <a href="/legal" class="text-gray-500 hover:text-gray-200 transition">Privacy Policy</a>
+                </p>
                 © 2026 MiniQuiz. All rights reserved.
             </footer>
         `

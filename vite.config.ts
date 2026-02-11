@@ -10,7 +10,8 @@ export default defineConfig({
             input: {
                 auth: 'auth.html',
                 index: 'index.html',
-                editor: 'editor.html'
+                editor: 'editor.html',
+                legal: 'legal.html'
             }
         }
     }
