@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit"
 import { customElement } from "lit/decorators.js"
 import "../components/navbar"
+import questionsIllustration from "../assets/question.svg"
 
 @customElement("page-index")
 export class PageIndex extends LitElement {
@@ -21,7 +22,7 @@ export class PageIndex extends LitElement {
                         <a href="#features" class="px-6 py-3 rounded-xl border border-gray-700 hover:border-indigo-500">Xem tính năng</a>
                     </div>
                 </div>
-                <img class="max-w-lg mx-auto hidden md:block pointer-events-none" src="/src/assets/question.svg">
+                <img class="max-w-lg mx-auto hidden md:block pointer-events-none" src="${questionsIllustration}" alt="Questions Illustration">
             </section>
 
             <section id="features" class="max-w-7xl mx-auto px-6 py-24">
