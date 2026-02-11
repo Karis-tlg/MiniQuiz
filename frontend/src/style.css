@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/forms";
 @import "@fontsource/inter";
 @import "katex/dist/katex.min.css";
 @import "github-markdown-css/github-markdown.css";
@@ -6,7 +7,7 @@
 
 @theme {
     --color-default-background: #0b1215;
-    --color-default-card: #0b1324;
+    --color-default-card: #121827;
     --color-default-border: #1c2742;
 
     --color-default-primary: #6366f1;
