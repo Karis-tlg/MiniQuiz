@@ -6,6 +6,7 @@ export default defineConfig({
         tailwindcss(),
     ],
     build: {
+        chunkSizeWarningLimit: 2048,
         rolldownOptions: {
             input: {
                 auth: 'auth.html',
