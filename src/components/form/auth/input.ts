@@ -35,7 +35,7 @@ export class ElementInput extends LitElement {
                             <i class="fa-solid ${this.icon} translate-y-0.5"></i>
                         </div>
                     ` : null}
-                    <input autocomplete=${this.autocomplete} type="${this.type}" placeholder="${this.placeholder}" class="mt-1 w-full px-8 py-3 rounded-xl border border-gray-700 focus:outline-none focus:border-indigo-500" />
+                    <input autocomplete=${this.autocomplete} type="${this.type}" placeholder="${this.placeholder}" class="mt-1 w-full px-8 py-3 rounded-xl bg-gray-800 border border-gray-700 focus:outline-none focus:border-indigo-500" />
                     ${ this.type === "password" ? html`
                         <button @click=${(button: PointerEvent) => this.togglePasswordVisibility(button.currentTarget as HTMLElement)} type="button" class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200">
                             <i class="fa-solid fa-eye-slash translate-y-0.5"></i>
