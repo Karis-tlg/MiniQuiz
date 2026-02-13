@@ -5,6 +5,7 @@ import "../components/navbar"
 import { ElementSidebar } from"../components/form/editor/sidebar"
 import { ElementEditorMultiChoice } from "../components/form/editor/questions/multi_choice/editor"
 import { getQuizEditorData } from "../apis/quiz"
+import { getUserData } from "../apis/user"
 
 @customElement("page-editor")
 export class PageEditor extends LitElement {
@@ -17,6 +18,11 @@ export class PageEditor extends LitElement {
 
     protected createRenderRoot(): HTMLElement | DocumentFragment {
         return this
+    }
+
+    async connectedCallback() {
+        super.connectedCallback()
+        if (!(await getUserData()).email) window.location.href = "/auth"
     }
 
     firstUpdated() {

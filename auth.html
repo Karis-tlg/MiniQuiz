@@ -7,9 +7,13 @@
         <link rel="stylesheet" href="/src/style.css" />
         <title>MiniQuiz - Auth</title>
         <script src="https://kit.fontawesome.com/24fada58cd.js" crossorigin="anonymous" async defer></script>
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
         <script type="module" src="/src/pages/auth.ts"></script>
     </head>
     <body>
+        <script>
+            console.log(turnstile, "Hello")
+        </script>
         <page-auth></page-auth>
     </body>
 </html>

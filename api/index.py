@@ -1,15 +1,28 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from utils.database import Database
+from utils.mail import MailClient
 
-app = FastAPI(docs_url="/api/docs", openapi_url="/api/openapi.json")
+from routers import users
+from routers import quizzes
 
-@app.get("/")
-def index():
-    return {"message": "Hello from FastAPI on Vercel /"}
+import dotenv
 
-# @app.get("/api/hello")
-# def hello():
-#     return {"message": "Hello from FastAPI on Vercel /api/hello"}
+dotenv.load_dotenv("../.env.local")
 
-@app.get("/hello")
-def hello2():
-    return {"message": "Hello from FastAPI on Vercel /hello"}
+db = Database()
+mail = MailClient()
+app = FastAPI(docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url="/api/redoc")
+app.state.db = db
+app.state.mail = mail
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(users.router)
+app.include_router(quizzes.router)

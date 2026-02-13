@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit"
 import { customElement } from "lit/decorators.js"
 import "../components/navbar"
+import "../components/avatar"
 import questionsIllustration from "../assets/question.svg"
 
 @customElement("page-index")

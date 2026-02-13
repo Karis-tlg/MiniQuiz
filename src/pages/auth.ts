@@ -2,21 +2,34 @@ import { LitElement, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
 import { repeat } from "lit/directives/repeat.js"
 import "../components/navbar"
+import "../components/notify"
 import "../components/form/auth"
 import googleLogo from "../assets/google.svg"
 import discordLogo from "../assets/discord.svg"
 import auth_illustration from "../assets/auth_illustration.svg"
+import { getUserData } from "../apis/user"
 
 @customElement("page-auth")
 export class PageAuth extends LitElement {
     @state() currentForm: number = 0
+    @state() turnstile_widgetId: any
 
     protected createRenderRoot(): HTMLElement | DocumentFragment {
         return this
     }
 
-    connectedCallback() {
+    protected firstUpdated() {
+        this.turnstile_widgetId = turnstile.render("#turnstile-container", {
+            sitekey: import.meta.env.VITE_CF_TURNSTILE_SITEKEY,
+            theme: "dark"
+        })
+    }
+
+    async connectedCallback() {
         super.connectedCallback()
+        
+        if ((await getUserData()).email) window.location.href = "/dashboard"
+
         const url = new URL(window.location.href)
         const form = url.searchParams.get("form")
         if (form) requestAnimationFrame(() => this.changeForm(parseInt(form)))
@@ -27,7 +40,7 @@ export class PageAuth extends LitElement {
 
         const view = this.querySelector("#email-login-view") as HTMLElement
         const slider = this.querySelector("#email-login-slider") as HTMLElement
-        slider.style.transform = `translateX(-${index * 100 / 3}%)`
+        slider.style.transform = `translateX(-${index * 100 / 4}%)`
         view.style.height = (slider.children[this.currentForm] as HTMLElement).offsetHeight + "px"
 
         const url = new URL(window.location.href)
@@ -39,7 +52,9 @@ export class PageAuth extends LitElement {
         return html`
             <element-navbar></element-navbar>
 
-            <div class="lg:grid lg:grid-cols-2 lg:gap-8 lg:max-w-4xl w-full max-w-md mx-auto my-24 bg-default-card/75 backdrop-blur-sm border border-gray-800 rounded-3xl p-8 shadow-2xl">
+            <element-notify-container class="block mt-16 w-full md:w-3/4 lg:w-2/3 mx-auto"></element-notify-container>
+
+            <div class="lg:grid lg:grid-cols-2 lg:gap-8 lg:max-w-4xl w-full max-w-md mx-auto mt-12 mb-24 bg-default-card/75 backdrop-blur-sm border border-gray-800 rounded-3xl p-8 shadow-2xl">
                 <div>
                     <div class="text-center mb-8">
                         <h1 class="text-3xl font-extrabold text-default-primary">MiniQuiz</h1>
@@ -68,16 +83,21 @@ export class PageAuth extends LitElement {
 
                     <!-- Form -->
                     <div id="email-login-view" class="w-full overflow-hidden" style="height: 252px">
-                        <div id="email-login-slider" class="w-[300%] flex transition-transform ease-in-out duration-500">
-                            <element-login_form class="w-full h-fit"></element-login_form>
-                            <element-register_form class="w-full h-fit"></element-register_form>
-                            <element-forgot_passwd_form class="w-full h-fit"></element-forgot_passwd_form>
+                        <div id="email-login-slider" class="w-[400%] flex transition-transform ease-in-out duration-500">
+                            <element-login_form .turnstileWidgetId="${this.turnstile_widgetId}" class="w-full h-fit"></element-login_form>
+                            <element-register_form turnstile_widgetId="${this.turnstile_widgetId}" class="w-full h-fit"></element-register_form>
+                            <element-forgot_passwd_form turnstileWidgetId="${this.turnstile_widgetId}" class="w-full h-fit"></element-forgot_passwd_form>
+                            <element-reset_passwd_form turnstile_widgetId="${this.turnstile_widgetId}" class="w-full h-fit"></element-reset_passwd_form>
                         </div>
+                    </div>
+
+                    <div class="flex items-center justify-center mt-5">
+                        <div id="turnstile-container"></div>
                     </div>
 
                     <!-- Footer -->
                     <div class="grid grid-cols-2 divide-gray-800 divide-x-2 text-center text-sm text-gray-500 mt-8">
-                        ${repeat([{i: 0, label: "Đăng nhập"}, {i: 1, label: "Đăng ký"}, {i: 2, label: "Quên mật khẩu"}].filter((item) => item.i !== this.currentForm), (item) => item.i, (item) => html`
+                        ${repeat([{i: 0, label: "Đăng nhập"}, {i: 1, label: "Đăng ký"}, {i: 2, label: "Quên mật khẩu"}].filter((item) => item.i !== this.currentForm).slice(0, 2), (item) => item.i, (item) => html`
                             <button @click=${() => requestAnimationFrame(() => this.changeForm(item.i))} class="text-indigo-400 hover:underline">${item.label}</button>
                         `)}
                     </div>
@@ -93,3 +113,4 @@ declare global {
         "page-auth": PageAuth
     }
 }
+declare const turnstile: any;
