@@ -1,4 +1,4 @@
 fastapi
-"pymongo[srv]"
-"pwdlib[argon2]"
+pymongo[srv]
+pwdlib[argon2]
 pyjwt

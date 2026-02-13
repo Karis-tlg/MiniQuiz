@@ -6,9 +6,11 @@ from utils.mail import MailClient
 from routers import users
 from routers import quizzes
 
-import dotenv
+import os
 
-dotenv.load_dotenv("../.env.local")
+if os.path.exists("../.env.local"):
+    import dotenv
+    dotenv.load_dotenv("../.env.local")
 
 db = Database()
 mail = MailClient()
