@@ -3,7 +3,7 @@ from fastapi import Request
 from pwdlib import PasswordHash
 from aiohttp import ClientSession
 from datetime import datetime, timedelta, timezone
-from utils.database import Database
+from .database import Database
 
 password_hash = PasswordHash.recommended()
 SECRET_KEY = os.environ.get("SECRET_KEY")

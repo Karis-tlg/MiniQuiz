@@ -3,10 +3,10 @@ from datetime import timedelta
 from fastapi import APIRouter, Request, Response, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 from typing import Annotated
-from utils import auth
-from utils.mail import MailClient
-from utils.models import UserResponse, UserCreate, UserLogin
-from utils.database import Database
+from ..utils import auth
+from ..utils.mail import MailClient
+from ..utils.models import UserResponse, UserCreate, UserLogin
+from ..utils.database import Database
 
 router = APIRouter(
     prefix="/api/user",
