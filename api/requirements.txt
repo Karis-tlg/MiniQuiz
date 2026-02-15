@@ -2,7 +2,6 @@ fastapi
 pymongo[srv]
 pwdlib[argon2]
 pyjwt
-aiohttp
 pydantic[email]
 Authlib
 itsdangerous
