@@ -1,46 +1,92 @@
 import os, jwt
 from fastapi import Request
 from pwdlib import PasswordHash
-from aiohttp import ClientSession
+from aiohttp import ClientSession, BasicAuth
+from authlib.integrations.starlette_client import OAuth
 from datetime import datetime, timedelta, timezone
 from .database import Database
 
-password_hash = PasswordHash.recommended()
-SECRET_KEY = os.environ.get("SECRET_KEY")
-ALGORITHM = os.environ.get("ALGORITHM")
+class Auth:
+    def __init__(self):
+        self.password_hash = PasswordHash.recommended()
+        self.SECRET_KEY = os.environ.get("SECRET_KEY")
+        self.ALGORITHM = os.environ.get("ALGORITHM")
+        self.oauthlib = OAuth()
 
-def verify_password(plain_password, hashed_password):
-    return password_hash.verify(plain_password, hashed_password)
+        self.oauthlib.register(
+            "discord",
+            client_id=os.environ.get("DISCORD_CLIENT_ID"),
+            client_secret=os.environ.get("DISCORD_CLIENT_SECRET"),
+            client_kwargs={"scope": "identify email"},
+            access_token_url='https://discord.com/api/oauth2/token',
+            authorize_url='https://discord.com/api/oauth2/authorize',
+            api_base_url='https://discord.com/api/',
+        )
 
-def get_password_hash(password):
-    return password_hash.hash(password)
+        self.oauthlib.register(
+            name='google',
+            client_id=os.environ.get("GOOGLE_CLIENT_ID"),
+            client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
+            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+            client_kwargs={'scope': 'openid email profile'}
+        )
 
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    expires_delta = expires_delta or timedelta(days=30)
-    to_encode.update({"exp": datetime.now(timezone.utc) + expires_delta})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    def verify_password(self, plain_password, hashed_password):
+        return self.password_hash.verify(plain_password, hashed_password)
+
+    def get_password_hash(self, password):
+        return self.password_hash.hash(password)
+
+    def create_access_token(self, data: dict, expires_delta: timedelta = None):
+        to_encode = data.copy()
+        expires_delta = expires_delta or timedelta(days=30)
+        to_encode.update({"exp": datetime.now(timezone.utc) + expires_delta})
+        encoded_jwt = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
+        return encoded_jwt
 
 
-def decode_access_token(token: str):
-    try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except:
-        return {}
+    def decode_access_token(self, token: str):
+        try:
+            return jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+        except:
+            return {}
 
-async def get_current_user(request: Request):
-    db: Database = request.app.state.db
-    token = request.cookies.get("token")
-    payload = decode_access_token(token)
-    user_email: str = payload.get("sub")
-    if user_email is None or payload.get("type") != "token":
-        return
-    user = await db.get_user_by_email(user_email)
-    return user
+    async def get_current_user(self, request: Request):
+        db: Database = request.app.state.db
+        token = request.cookies.get("token")
+        payload = self.decode_access_token(token)
+        user_email: str = payload.get("sub")
+        if user_email is None or payload.get("type") != "token":
+            return
+        user = await db.get_user_by_email(user_email)
+        return user
 
-async def verify_cf_turnstile(turnstile_token: str) -> bool:
-    async with ClientSession() as session:
-        async with session.post("https://challenges.cloudflare.com/turnstile/v0/siteverify", json={"secret": os.environ.get("CF_TURNSTILE_SECRET"), "response": turnstile_token}) as response:
-            data = await response.json()
-            return data.get("success", False)
+    async def has_user_logged_in(self, request: Request) -> bool:
+        db: Database = request.app.state.db
+        token = request.cookies.get("token")
+        payload = self.decode_access_token(token)
+        user_email: str = payload.get("sub")
+        if user_email is None or payload.get("type") != "token":
+            return False
+        return await db.has_user(user_email)
+
+    async def verify_cf_turnstile(turnstile_token: str) -> bool:
+        async with ClientSession() as session:
+            async with session.post("https://challenges.cloudflare.com/turnstile/v0/siteverify", json={"secret": os.environ.get("CF_TURNSTILE_SECRET"), "response": turnstile_token}) as response:
+                data = await response.json()
+                return data.get("success", False)
+
+    async def get_discord_user_access_token(code: str):
+        async with ClientSession() as session:
+            async with session.post("https://discord.com/api/v10/oauth2/token", headers={"Content-Type": "application/x-www-form-urlencoded"}, auth=BasicAuth(os.environ.get("DISCORD_CLIENT_ID"), os.environ.get("DISCORD_CLIENT_SECRET")), data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": os.environ.get("DISCORD_REDIRECT_URI")
+            }) as response:
+                data = await response.json()
+                return data.get("access_token")
+
+    async def get_discord_user_info(access_token: str):
+        async with ClientSession() as session:
+            async with session.get("https://discord.com/api/v10/users/@me", headers={"Authorization": f"Bearer {access_token}"}) as response:
+                return await response.json()

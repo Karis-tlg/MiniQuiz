@@ -1,9 +1,10 @@
+import os
 import re
 from datetime import timedelta
 from fastapi import APIRouter, Request, Response, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 from typing import Annotated
-from ..utils import auth
+from ..utils.auth import Auth
 from ..utils.mail import MailClient
 from ..utils.models import UserResponse, UserCreate, UserLogin
 from ..utils.database import Database
@@ -14,19 +15,25 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+auth_manager = Auth()
+
 @router.get("/", response_model=UserResponse)
-async def get_user(user: Annotated[UserResponse, Depends(auth.get_current_user)]):
+async def get_user(user: Annotated[UserResponse, Depends(auth_manager.get_current_user)]):
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user
 
+@router.get("/logged-in")
+async def is_logged_in(logged_in: Annotated[bool, Depends(auth_manager.has_user_logged_in)]):
+    return {"logged_in": logged_in}
+
 @router.post("/register")
 async def create_user(request: Request, user: UserCreate, turnstile_token: str):
-    if not await auth.verify_cf_turnstile(turnstile_token):
+    if not await auth_manager.verify_cf_turnstile(turnstile_token):
         raise HTTPException(status_code=400, detail="Vui lòng xác minh captcha trước khi đăng ký")
     db: Database = request.app.state.db
     mail: MailClient = request.app.state.mail
-    if await auth.get_current_user(request) is not None:
+    if await auth_manager.has_user_logged_in(request):
         raise HTTPException(status_code=401, detail="Bạn đã đăng nhập")
     if await db.get_user_by_email(user.email) is not None:
         raise HTTPException(status_code=400, detail="Email đã tồn tại")
@@ -36,17 +43,17 @@ async def create_user(request: Request, user: UserCreate, turnstile_token: str):
         raise HTTPException(status_code=400, detail="Mật khẩu không hợp lệ")
     if re.match(r"^[a-zA-Z0-9]{4,}$", user.username) is None:
         raise HTTPException(status_code=400, detail="Tên người dùng không hợp lệ")
-    user.password = auth.get_password_hash(user.password)
+    user.password = auth_manager.get_password_hash(user.password)
     user_data = user.model_dump(by_alias=True)
     user_data["type"] = "create_user"
-    verify_token = auth.create_access_token(user_data, timedelta(minutes=30))
+    verify_token = auth_manager.create_access_token(user_data, timedelta(minutes=30))
     await mail.send_mail("Xác minh tài khoản", user.email, 6002, {"username": user.username, "url": f"https://miniquizzes.vercel.app/api/auth/verify?token={verify_token}"})
     return {"status": "success", "message": "Vui lòng xác minh email bằng liên kết đã được gửi tới hòm thư"}
 
 @router.get("/verify")
 async def verify_user(request: Request, token: str):
     db: Database = request.app.state.db
-    user_data = auth.decode_access_token(token)
+    user_data = auth_manager.decode_access_token(token)
     if not user_data or user_data.get("type") != "create_user":
         return RedirectResponse("/auth?message=Xác minh không hợp lệ&type=error", status_code=302)
     user = UserCreate(**user_data)
@@ -55,18 +62,20 @@ async def verify_user(request: Request, token: str):
 
 @router.post("/login")
 async def login_user(request: Request, response: Response, user: UserLogin, turnstile_token: str):
-    if not await auth.verify_cf_turnstile(turnstile_token):
+    if not await auth_manager.verify_cf_turnstile(turnstile_token):
         raise HTTPException(status_code=400, detail="Vui lòng xác minh captcha trước khi đăng nhập")
-    if await auth.get_current_user(request) is not None:
+    if await auth_manager.get_current_user(request) is not None:
         raise HTTPException(status_code=401, detail="Bạn đã đăng nhập")
     db: Database = request.app.state.db
     user_db = await db.get_user_by_email(user.email)
     if user_db is None:
         raise HTTPException(status_code=400, detail="Người dùng không tồn tại")
-    if not auth.verify_password(user.password, user_db["password"]):
+    if user_db["password"] is None:
+        raise HTTPException(status_code=400, detail="Tài khoản không được đăng nhập bằng mật khẩu")
+    if not auth_manager.verify_password(user.password, user_db["password"]):
         raise HTTPException(status_code=400, detail="Sai mật khẩu")
-    response.set_cookie("token", auth.create_access_token({"type": "token", "sub": user.email}), httponly=True, secure=True)
-    return {"status": "success", "message": "Đăng nhập thanh cong"}
+    response.set_cookie("token", auth_manager.create_access_token({"type": "token", "sub": user.email}), httponly=True, secure=True)
+    return {"status": "success", "message": "Đăng nhập thành công"}
 
 @router.post("/logout")
 async def logout_user(response: Response):
@@ -75,35 +84,85 @@ async def logout_user(response: Response):
 
 @router.post("/forgot-password")
 async def forgot_password(request: Request, email: str, turnstile_token: str):
-    if not await auth.verify_cf_turnstile(turnstile_token):
+    if not await auth_manager.verify_cf_turnstile(turnstile_token):
         raise HTTPException(status_code=400, detail="Vui lòng xác minh captcha trước khi gửi yêu cầu thay đổi mật khâu")
     db: Database = request.app.state.db
     mail: MailClient = request.app.state.mail
     user_db = await db.get_user_by_email(email)
     if user_db is None:
         raise HTTPException(status_code=400, detail="Người dùng không tồn tại")
-    verify_token = auth.create_access_token({"type": "reset_password", "email": email}, timedelta(minutes=30))
-    await mail.send_mail("Thay đổi mật khẩu", email, 6008, {"username": user_db["username"], "url": f"https://miniquizzes.vercel.app/api/auth/reset-password?token={verify_token}"})
+    verify_token = auth_manager.create_access_token({"type": "reset_password", "email": email}, timedelta(minutes=30))
+    await mail.send_mail("Thay đổi mật khẩu", email, 6008, {"username": user_db["username"], "url": f"https://miniquizzes.vercel.app/api/auth?form=3&token={verify_token}"})
     return {"status": "success", "message": "Email đã được gửi tới hòm thư, vui lòng truy cập liên kết trong email để thay đổi mật khẩu"}
 
 @router.post("/reset-password")
 async def reset_password(request: Request, token: str, password: str, turnstile_token: str):
-    if not await auth.verify_cf_turnstile(turnstile_token):
+    if not await auth_manager.verify_cf_turnstile(turnstile_token):
         raise HTTPException(status_code=400, detail="Vui lòng xác minh captcha trước khi thay đổi mật khâu")
     db: Database = request.app.state.db
-    token_data = auth.decode_access_token(token)
+    token_data = auth_manager.decode_access_token(token)
     if not token_data or token_data.get("type") != "reset_password":
         raise HTTPException(status_code=400, detail="Yêu cầu thay đổi mật khẩu không hợp lệ")
     if re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=]).{8,}$", password) is None:
         raise HTTPException(status_code=400, detail="Mật khẩu không hợp lệ")
     email = token_data.get("email")
-    await db.update_user(email, {"password": auth.get_password_hash(password)})
-    return RedirectResponse("/auth?message=Thay đổi mật khâu thành công, đăng nhập để tiếp tục&type=success", status_code=302)
+    await db.update_user(email, {"password": auth_manager.get_password_hash(password)})
+    return {"status": "success", "message": "Thay đổi mật khẩu thành công"}
 
 @router.delete("/delete")
-async def delete_user(request: Request, user: Annotated[UserResponse, Depends(auth.get_current_user)]):
+async def delete_user(request: Request, user: Annotated[UserResponse, Depends(auth_manager.get_current_user)]):
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     db: Database = request.app.state.db
     await db.delete_user(user["email"])
     return {"status": "success", "message": "User deleted"}
+
+@router.get("/discord/login")
+async def discord_login(request: Request):
+    return await auth_manager.oauthlib.discord.authorize_redirect(request, redirect_uri=os.environ.get("DISCORD_REDIRECT_URI"))
+
+@router.get("/google/login")
+async def google_login(request: Request):
+    return await auth_manager.oauthlib.google.authorize_redirect(request, redirect_uri=os.environ.get("GOOGLE_REDIRECT_URI"))
+
+@router.get("/discord/callback")
+async def discord_callback(request: Request):
+    token = await auth_manager.oauthlib.discord.authorize_access_token(request)
+    resp = await auth_manager.oauthlib.discord.get('users/@me', token=token)
+    user_data = resp.json()
+
+    if not user_data:
+        return RedirectResponse("/auth?message=Không tìm thấy người dùng&type=error", status_code=302)
+
+    db: Database = request.app.state.db
+    user_avatar_url = f"https://cdn.discordapp.com/avatars/{user_data['id']}/{user_data['avatar']}.webp" if user_data.get("avatar") else "https://cdn.discordapp.com/embed/avatars/1.png"
+    user_db = await db.get_user_by_email(user_data["email"])
+
+    if user_db is None:
+        await db.create_user(user_data["username"], user_data["email"], user_avatar_url, login_type="discord")
+    elif user_db.get("login_type") != "discord":
+        return RedirectResponse("/auth?message=Tài khoản không được tạo bằng Discord&type=error", status_code=302)
+    
+    response = RedirectResponse("/dashboard", status_code=302)
+    response.set_cookie("token", auth_manager.create_access_token({"type": "token", "sub": user_data["email"]}), httponly=True, secure=True)
+    return response
+
+@router.get("/google/callback")
+async def auth(request: Request):
+    token = await auth_manager.oauthlib.google.authorize_access_token(request)
+    user_data = token.get("userinfo", {})
+
+    if not user_data:
+        return RedirectResponse("/auth?message=Không tìm thấy người dùng&type=error", status_code=302)
+    
+    db: Database = request.app.state.db
+    user_db = await db.get_user_by_email(user_data["email"])
+
+    if user_db is None:
+        await db.create_user(user_data["name"], user_data["email"], user_data["picture"], login_type="google")
+    elif user_db.get("login_type") != "google":
+        return RedirectResponse("/auth?message=Tài khoản không được tạo bằng Google&type=error", status_code=302)
+    
+    response = RedirectResponse("/dashboard", status_code=302)
+    response.set_cookie("token", auth_manager.create_access_token({"type": "token", "sub": user_data["email"]}), httponly=True, secure=True)
+    return response

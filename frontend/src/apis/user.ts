@@ -14,7 +14,7 @@ export async function registerUser(username: string, email: string, password: st
 }
 
 export async function loginUser(email: string, password: string, turnstile_token: string) {
-    return await fetch(`/api/user/login?turnstile_token=${turnstile_token}`, { method: "POST", headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, turnstile_token }) }).then(res => res.json())
+    return await fetch(`/api/user/login?turnstile_token=${turnstile_token}`, { method: "POST", credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, turnstile_token }) }).then(res => res.json())
 }
 
 export async function forgotpasswordUser(email: string, turnstile_token: string) {
@@ -26,11 +26,15 @@ export async function resetpasswordUser(password: string, token: string, turnsti
 }
 
 export async function logoutUser() {
-    return await fetch(`/api/user/logout`, { method: "POST" }).then(res => res.json())
+    return await fetch(`/api/user/logout`, { method: "POST", credentials: 'include' }).then(res => res.json())
 }
 
 export async function getUserData() {
-    return await fetch(`/api/user`).then(res => res.json())
+    return await fetch(`/api/user`, { method: "GET", credentials: 'include' }).then(res => res.json())
+}
+
+export async function hasUserLogged() {
+    return await fetch(`/api/user/logged-in`, { method: "GET", credentials: 'include' }).then(res => res.json()).then(data => data["logged_in"])
 }
 
 export async function deleteUser() {

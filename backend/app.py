@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from .utils.database import Database
 from .utils.mail import MailClient
@@ -14,12 +15,14 @@ if os.path.exists("../.env.local"):
 db = Database()
 mail = MailClient()
 app = FastAPI(docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url="/api/redoc")
+
 app.state.db = db
 app.state.mail = mail
 
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SECRET_KEY"))
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

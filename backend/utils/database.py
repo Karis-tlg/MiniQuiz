@@ -14,6 +14,9 @@ class Database:
 
     async def get_user_by_email(self, email: str):
         return await self.users.find_one({"email": email})
+    
+    async def has_user(self, email: str):
+        return (await self.users.count_documents({"email": email}, limit=1)) > 0
 
     async def create_user(self, username: str, email: str,  avatar: str, password: str = None, login_type: Literal["email", "google", "discord"] = "email", disabled: bool = False):
         data = {"username": username, "avatar": avatar, "email": email, "password": password, "login_type": login_type, "disabled": disabled}
