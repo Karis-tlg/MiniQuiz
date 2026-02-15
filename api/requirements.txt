@@ -6,3 +6,4 @@ aiohttp
 pydantic[email]
 Authlib
 itsdangerous
+httpx
