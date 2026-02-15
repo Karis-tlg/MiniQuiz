@@ -148,7 +148,7 @@ async def discord_callback(request: Request):
     return response
 
 @router.get("/google/callback")
-async def auth(request: Request):
+async def google_callback(request: Request):
     token = await auth_manager.oauthlib.google.authorize_access_token(request)
     user_data = token.get("userinfo", {})
 
