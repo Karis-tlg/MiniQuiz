@@ -18,6 +18,7 @@ export default defineConfig({
         chunkSizeWarningLimit: 2048,
         rolldownOptions: {
             input: {
+                '404': '404.html',
                 auth: 'auth.html',
                 index: 'index.html',
                 editor: 'editor.html',
