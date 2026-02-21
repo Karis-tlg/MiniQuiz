@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit"
 import { customElement } from "lit/decorators.js"
+import "../components/icon"
 import "../components/navbar"
 import "../components/avatar"
 import questionsIllustration from "../assets/question.svg"
@@ -30,15 +31,15 @@ export class PageIndex extends LitElement {
                 <h2 class="text-3xl font-bold text-center mb-16">Tính năng nổi bật</h2>
                 <div class="grid md:grid-cols-3 gap-8">
                     <div class="bg-card p-6 rounded-2xl border border-gray-800">
-                        <h3 class="text-xl font-semibold mb-2 text-indigo-400"><i class="fa-solid fa-bolt-lightning"></i> Nhanh & nhẹ</h3>
+                        <h3 class="text-xl font-semibold mb-2 text-indigo-400"><element-icon icon="flash"></element-icon> Tạo Nhanh & nhẹ</h3>
                         <p class="text-gray-400">Thiết kế tối giản, load nhanh trên mọi thiết bị.</p>
                     </div>
                     <div class="bg-card p-6 rounded-2xl border border-gray-800">
-                        <h3 class="text-xl font-semibold mb-2 text-indigo-400"><i class="fa-solid fa-location-crosshairs"></i> Tập trung học tập</h3>
+                        <h3 class="text-xl font-semibold mb-2 text-indigo-400"><element-icon icon="crop"></element-icon> Tập trung học tập</h3>
                         <p class="text-gray-400">Không quảng cáo, không xao nhãng.</p>
                     </div>
                     <div class="bg-card p-6 rounded-2xl border border-gray-800">
-                        <h3 class="text-xl font-semibold mb-2 text-indigo-400"><i class="fa-solid fa-brush"></i> Tạo Quiz nhanh</h3>
+                        <h3 class="text-xl font-semibold mb-2 text-indigo-400"><element-icon icon="leaf"></element-icon> Tạo Quiz nhanh</h3>
                         <p class="text-gray-400">Tạo quiz đơn giản, nhanh chóng.</p>
                     </div>
                 </div>
@@ -54,7 +55,7 @@ export class PageIndex extends LitElement {
                             <span class="relative z-10 block px-6 py-3 rounded-xl bg-gray-950">
                                 <div class="relative z-10 flex items-center space-x-2">
                                     <span class="transition-all duration-500 group-hover:translate-x-1">Bắt đầu ngay</span>
-                                    <i class="fa-solid fa-arrow-right transition-transform duration-500 group-hover:translate-x-2"></i>
+                                    <element-icon icon="arrow-forward" class="transition-transform duration-500 group-hover:translate-x-2"></element-icon>
                                 </div>
                             </span>
                         </a>

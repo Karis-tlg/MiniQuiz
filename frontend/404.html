@@ -6,7 +6,7 @@
         <link rel="icon" type="image/svg+xml" href="/logo.svg" />
         <link rel="stylesheet" href="/src/style.css" />
         <title>MiniQuiz - 404 Not Found</title>
-        <script src="https://kit.fontawesome.com/24fada58cd.js" crossorigin="anonymous" async defer></script>
+        <script type="module" src="src/components/icon.ts"></script>
     </head>
     <body class="bg-default-background flex flex-col items-center justify-center h-screen select-none">
         <img src="/src/assets/space.svg" alt="404" class="w-100" />
@@ -14,8 +14,8 @@
         <h2 class="text-3xl font-bold text-default-text-sub">Trang không tồn tại</h2>
         <p class="text-default-text-sub">Có vẻ bạn đã đi xa tới mức nhìn thấy được trái đất rồi</p>
         <div class="flex gap-4">
-            <a href="/" class="block mt-5 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium"><i class="fa-solid fa-house"></i> Quay lại trang chủ</a>
-            <button class="block mt-5 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i> Quay lại trang trước</button>
+            <a href="/" class="block mt-5 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium"><element-icon icon="home"></element-icon> Quay lại trang chủ</a>
+            <button class="block mt-5 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium" onclick="history.back()"><element-icon icon="arrow-back"></element-icon> Quay lại trang trước</button>
         </div>
     </body>
 </html>

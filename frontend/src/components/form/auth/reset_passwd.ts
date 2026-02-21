@@ -54,8 +54,8 @@ export class ElementResetPasswordForm extends LitElement {
     protected render() {
         return html`
             <form class="flex flex-col gap-y-4">
-                <element-input ${ref(this.passwordIRef)} label="Mật khẩu" icon="fa-lock" placeholder="Nhập mật khẩu mới" type="password" autocomplete="new-password" regex_type="password"></element-input>
-                <element-input ${ref(this.confirmPasswordIRef)} label="Nhập lại mật khẩu" icon="fa-lock" placeholder="Nhập lại mật khẩu" type="password" regex_type="password"></element-input>
+                <element-input ${ref(this.passwordIRef)} label="Mật khẩu" icon="lock-closed" placeholder="Nhập mật khẩu mới" type="password" autocomplete="new-password" regex_type="password"></element-input>
+                <element-input ${ref(this.confirmPasswordIRef)} label="Nhập lại mật khẩu" icon="lock-closed" placeholder="Nhập lại mật khẩu" type="password" regex_type="password"></element-input>
 
                 <button type="button" @click=${this.submit} class="w-full mt-4 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-700 text-white font-semibold">
                     Thay đổi mật khẩu

@@ -51,10 +51,10 @@ export class ElementRegisterForm extends LitElement {
     protected render() {
         return html`
             <form class="flex flex-col gap-y-4">
-                <element-input ${ref(this.usernameIRef)} label="Tên người dùng" icon="fa-user" placeholder="Nhập tên người dùng" type="text" regex_type="username" autocomplete="name"></element-input>
-                <element-input ${ref(this.emailIRef)} label="Email" icon="fa-envelope" placeholder="Nhập email" type="email" regex_type="email" autocomplete="email"></element-input>
-                <element-input ${ref(this.passwordIRef)} label="Mật khẩu" icon="fa-lock" placeholder="Nhập mật khẩu" type="password" regex_type="password" autocomplete="new-password"></element-input>
-                <element-input ${ref(this.confirmPasswordIRef)} label="Nhập lại mật khẩu" icon="fa-lock" placeholder="Nhập lại mật khẩu" regex_type="password" type="password"></element-input>
+                <element-input ${ref(this.usernameIRef)} label="Tên người dùng" icon="user" placeholder="Nhập tên người dùng" type="text" regex_type="username" autocomplete="name"></element-input>
+                <element-input ${ref(this.emailIRef)} label="Email" icon="mail" placeholder="Nhập email" type="email" regex_type="email" autocomplete="email"></element-input>
+                <element-input ${ref(this.passwordIRef)} label="Mật khẩu" icon="lock-closed" placeholder="Nhập mật khẩu" type="password" regex_type="password" autocomplete="new-password"></element-input>
+                <element-input ${ref(this.confirmPasswordIRef)} label="Nhập lại mật khẩu" icon="lock-closed" placeholder="Nhập lại mật khẩu" regex_type="password" type="password"></element-input>
 
                 <button @click=${this.submit} type="button" class="w-full mt-4 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-700 text-white font-semibold">
                     Đăng ký

@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
+import "../components/icon"
 import "../components/navbar"
 import "../components/dropdown"
 
@@ -21,10 +22,10 @@ export class PageLegal extends LitElement {
                 <div class="w-full flex items-center justify-center border-y border-gray-700 bg-gray-700/25 backdrop-blur-lg mt-10 p-5">
                     <div class="w-full lg:w-1/2 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <button @click=${() => {this.tab = 0}} class="w-full py-3 ${this.tab === 0 ? "bg-indigo-600" : "bg-gray-700"} hover:bg-indigo-600 rounded-lg text-white font-semibold transition-colors">
-                            <i class="fa-solid fa-book"></i> Terms of Service
+                            <element-icon icon="book"></element-icon> Terms of Service
                         </button>
                         <button @click=${() => {this.tab = 1}} class="w-full py-3 ${this.tab === 1 ? "bg-indigo-600" : "bg-gray-700"} hover:bg-indigo-600 rounded-lg text-white font-semibold transition-colors">
-                            <i class="fa-solid fa-user-lock"></i> Privacy Policy
+                            <element-icon icon="shield-half"></element-icon> Privacy Policy
                         </button>
                     </div>
                 </div>

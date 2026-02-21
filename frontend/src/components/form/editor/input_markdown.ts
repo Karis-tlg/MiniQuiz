@@ -22,9 +22,11 @@ export class ElementEditorInputMarkdown extends LitElement {
     }
 
     auto_resize(event: InputEvent) {
-        const textarea = event.currentTarget as HTMLTextAreaElement
+        console.log(event)
+        if (event.inputType !== "deleteContentBackward" && event.inputType !== "insertLineBreak") return
+        const textarea = event.target as HTMLTextAreaElement
         textarea.style.height = "auto"
-        requestAnimationFrame(() => textarea.style.height = textarea.scrollHeight + "px")
+        textarea.style.height = textarea.scrollHeight + "px"
     }
 
     render_markdown() {
@@ -46,6 +48,11 @@ export class ElementEditorInputMarkdown extends LitElement {
         this.textareaRef.value?.classList.add("hidden")
     }
 
+    add_line(content: string) {
+        this.textareaRef.value!.value += `\n${content}`
+        this.render_markdown()
+    }
+
     get_value(): string | undefined {
         return this.textareaRef.value?.value
     }
@@ -58,7 +65,7 @@ export class ElementEditorInputMarkdown extends LitElement {
     protected render() {
         return html`
             <div class="w-full">
-                <textarea ${ref(this.textareaRef)} style="min-height: ${this.minHeight}rem" @input="${(event: InputEvent) => this.auto_resize(event)}" @change="${() => this.render_markdown()}" @blur="${() => this.leave_textarea()}" class="hidden w-full resize-none p-4 overflow-y-hidden overflow-x-auto rounded bg-slate-800 border border-slate-700 focus:border-default-primary outline-none transition"></textarea>
+                <textarea ${ref(this.textareaRef)} name="input_markdown" style="min-height: ${this.minHeight}rem" @input="${(event: InputEvent) => this.auto_resize(event)}" @blur="${() => { this.render_markdown(); this.leave_textarea() }}" class="hidden w-full resize-none p-4 overflow-y-hidden overflow-x-auto rounded bg-slate-800 border border-slate-700 focus:border-default-primary outline-none transition"></textarea>
                 <div ${ref(this.previewRef)} style="min-height: ${this.minHeight}rem" @click="${() => this.toggle_textarea()}" id="preview" class="markdown-body p-4 bg-slate-800 border border-slate-700 rounded"></div>
             </div>
         `

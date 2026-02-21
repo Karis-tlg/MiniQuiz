@@ -3,6 +3,7 @@ import { html } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import { createRef, ref, type Ref } from "lit/directives/ref.js"
 import { type ElementEditorInputMarkdown } from "../../input_markdown"
+import { uploadImage } from "../../../../../apis/quiz"
 
 @customElement("element-question-editor-multi_choice-option")
 export class ElementEditorMultiChoiceOption extends ElementEditorBase {
@@ -34,7 +35,7 @@ export class ElementEditorMultiChoiceOption extends ElementEditorBase {
             <div class="flex items-center w-full">
                 <input .checked="${this.value_checked}" type="radio" class="text-default-primary bg-gray-800 form-radio mr-3 w-4 h-4" ${ref(this.valueRef)} />
                 <element-editor-input_markdown value="${this.label_value}" ${ref(this.labelRef)} minHeight="2" class="w-full"></element-editor-input_markdown>
-                <button @click="${this.remove}" class="text-default-text-sub hover:text-red-500 transition-colors ml-3"><i class="fa-solid fa-xmark"></i></button>
+                <button @click="${this.remove}" class="text-default-text-sub hover:text-red-500 transition-colors ml-3"><element-icon icon="close"></element-icon></button>
             </div>
         `
     }
@@ -60,6 +61,14 @@ export class ElementEditorMultiChoice extends ElementEditorBase {
         }
     }
 
+    async add_image(event: Event) {
+        const file = (event.target as HTMLInputElement).files?.[0]
+        if (!file) return
+
+        const res = await uploadImage(file)
+        this.questionRef.value?.add_line(`![${file.name}](${res.url})`)
+    }
+
     async add_option(id?: string, label?: string, correct?: boolean) {
         const option = new ElementEditorMultiChoiceOption()
         if (id) option.uuid = id
@@ -78,8 +87,11 @@ export class ElementEditorMultiChoice extends ElementEditorBase {
                         <span class="inline-block rounded-full w-6.5 h-6.5 bg-indigo-500 text-center text-gray-100 mr-2">${this.index}</span> Câu hỏi nhiều lựa chọn
                     </p>
                     <div>
-                        <button class="text-default-text-sub hover:text-indigo-500 transition-colors mr-3"><i class="fa-solid fa-images"></i></button>
-                        <button @click="${this.remove}" class="text-default-text-sub hover:text-red-500 transition-colors"><i class="fa-solid fa-trash"></i></button>
+                        <label class="text-default-text-sub hover:text-indigo-500 transition-colors mr-3">
+                            <element-icon icon="image"></element-icon>
+                            <input type="file" accept="image/*" class="hidden" @change="${this.add_image}">
+                        </label>
+                        <button @click="${this.remove}" class="text-default-text-sub hover:text-red-500 transition-colors"><element-icon icon="trash"></element-icon></button>
                     </div>
                 </div>
 
@@ -89,7 +101,7 @@ export class ElementEditorMultiChoice extends ElementEditorBase {
                     <p class="text-default-text-sub uppercase text-sm font-semibold mt-4">Đáp án</p>
                     <div ${ref(this.optionsRef)} class="grid grid-cols-1 gap-2 my-2"></div>
                     <button @click="${this.add_option}" class="text-default-text-sub hover:text-indigo-500 transition-colors mt-3">
-                        <i class="fa-solid fa-plus"></i> Thêm đáp án
+                        <element-icon icon="add"></element-icon> Thêm đáp án
                     </button>
                 </div>
             </div>

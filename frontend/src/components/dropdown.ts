@@ -24,7 +24,7 @@ export class Dropdown extends LitElement {
             <div class="w-full rounded-lg border border-gray-800">
                 <button @click=${this.toggle_handle} class="w-full flex items-center justify-between px-6 py-2 border-gray-600 bg-gray-800/75 hover:bg-gray-800 backdrop-blur-lg">
                     <span class="font-semibold">${this.summary}</span>
-                    <i ${ref(this.iconRef)} class="fa-solid fa-chevron-down"></i>
+                    <element-icon ${ref(this.iconRef)} icon="chevron-down" class="transition-transform"></element-icon>
                 </button>
                 <div ${ref(this.detailsDivRef)} class="hidden w-full p-5 bg-gray-800/50 backdrop-blur-lg">${this.details}</div>
             </div>

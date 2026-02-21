@@ -81,3 +81,5 @@ class Auth:
             )
             data = response.json()
             return data.get("success", False)
+        
+auth_manager = Auth()

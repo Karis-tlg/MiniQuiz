@@ -56,13 +56,17 @@ export class ElementSidebar extends LitElement {
         this.randomOptionsRef.value!.checked = value
     }
 
-    onFileChange(event: Event) {
+    async onFileChange(event: Event) {
         const file = event instanceof DragEvent ? event.dataTransfer?.files?.[0] : (event.target as HTMLInputElement).files?.[0]
         if (file && file.type === "application/json") {
             const reader = new FileReader()
             reader.onload = () => {
                 const json = JSON.parse(reader.result as string)
                 window.dispatchEvent(new CustomEvent("load_json_quiz", { detail: json }))
+            }
+            reader.onerror = (e) => {
+                window.dispatchEvent(new CustomEvent("page-notify", { detail: { message: "Lỗi không xác định", type: "error" } }))
+                console.error(e)
             }
             reader.readAsText(file)
         }
@@ -107,14 +111,14 @@ export class ElementSidebar extends LitElement {
                         @dragover="${(e: DragEvent) => { e.preventDefault(); (e.currentTarget as HTMLElement).classList.replace('border-slate-800', 'border-indigo-500') }}"
                         @dragleave="${(e: DragEvent) => { e.preventDefault(); (e.currentTarget as HTMLElement).classList.replace('border-indigo-500', 'border-slate-800') }}"
                         @drop="${(e: DragEvent) => { e.preventDefault(); (e.currentTarget as HTMLElement).classList.replace('border-indigo-500', 'border-slate-800'); this.onFileChange(e) }}"
-                        class="relative flex items-center p-3 bg-default-card border-2 border-slate-800 border-dashed rounded-lg hover:border-indigo-500 transition cursor-pointer"
+                        class="relative flex gap-x-3 items-center p-3 bg-default-card border-2 border-slate-800 border-dashed rounded-lg hover:border-indigo-500 transition cursor-pointer"
                     >
-                        <i class="fa-solid fa-file-upload text-5xl text-gray-400"></i>
+                        <element-icon icon="cloud-upload" size="13" class="text-gray-400"></element-icon>
                         <p>
                             <span class="text-sm text-indigo-400 mt-2">Tải lên</span>
                             <span class="text-sm text-gray-400 mt-2">hoặc kéo thả file quiz vào đây</span>
                         </p>
-                        <input ${ref(this.inputRef)} @change="${this.onFileChange}" type="file" accept=".json,.doc,.docx" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer">
+                        <input ${ref(this.inputRef)} @change="${this.onFileChange}" type="file" accept=".json" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer">
                     </div>
                 </nav>
             </aside>

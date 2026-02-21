@@ -6,3 +6,4 @@ pydantic[email]
 Authlib
 itsdangerous
 httpx
+cloudinary

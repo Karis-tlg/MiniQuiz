@@ -1,18 +1,19 @@
 import { LitElement, html } from "lit"
 import { customElement } from "lit/decorators.js"
 import { createRef, ref, type Ref } from "lit/directives/ref.js"
+import "../components/icon"
 import "../components/navbar"
+import "../components/notify"
 import { ElementSidebar } from"../components/form/editor/sidebar"
 import { ElementEditorMultiChoice } from "../components/form/editor/questions/multi_choice/editor"
-import { getQuizEditorData } from "../apis/quiz"
-import { getUserData } from "../apis/user"
+import { getQuizEditorData, newQuiz } from "../apis/quiz"
+import { hasUserLogged } from "../apis/user"
 
 @customElement("page-editor")
 export class PageEditor extends LitElement {
     sidebarRef: Ref<ElementSidebar> = createRef()
     mainRef: Ref<HTMLElement> = createRef()
     questionsRef: Ref<HTMLElement> = createRef()
-
     private observer?: MutationObserver
     private raf?: number
 
@@ -22,7 +23,7 @@ export class PageEditor extends LitElement {
 
     async connectedCallback() {
         super.connectedCallback()
-        if (!(await getUserData()).email) window.location.href = "/auth"
+        if (!await hasUserLogged()) window.location.href = "/auth"
     }
 
     firstUpdated() {
@@ -73,15 +74,20 @@ export class PageEditor extends LitElement {
         })
     }
 
-    add_question() {
-        const question = new ElementEditorMultiChoice()
-        this.questionsRef.value?.appendChild(question)
+    add_question(type: "multi_choice" | "true_false") {
+        switch (type) {
+            case "multi_choice":
+                const question = new ElementEditorMultiChoice()
+                this.questionsRef.value?.appendChild(question)
+                break
+            case "true_false":
+                break
+        }
         this.save_local()
     }
 
     async export_json() {
         return {
-            "id": crypto.randomUUID(),
             "title": this.sidebarRef.value?.get_title(),
             "randomize": {
                 "questions": this.sidebarRef.value?.is_random_questions(),
@@ -90,9 +96,16 @@ export class PageEditor extends LitElement {
             "questions": await Promise.all(Array.from(this.questionsRef.value?.querySelectorAll("element-question-editor-multi_choice") ?? []).map(question => question.export_json()))
         }
     }
+    
+    async save() {
+        const data = await this.export_json()
+        await this.save_local(data)
+        const result = await newQuiz(data)
+        window.dispatchEvent(new CustomEvent("page-notify", { detail: { message: result.message + " (ID: " + result.id + ")", type: "success" } }))
+    }
 
-    async save_local() {
-        sessionStorage.setItem("quiz", JSON.stringify(await this.export_json()))
+    async save_local(data?: any) {
+        sessionStorage.setItem("quiz", JSON.stringify(data ?? await this.export_json()))
     }
 
     clear_quiz() {
@@ -129,10 +142,12 @@ export class PageEditor extends LitElement {
             <element-navbar href="#">
                 <button slot="left" @click=${this.toggle_sidebar} class="lg:hidden text-lg text-default-text hover:text-indigo-500 transition"><i class="fa-solid fa-bars"></i></button>
                 <div slot="right" class="flex items-center gap-x-3">
-                    <button @click="${this.clear_quiz}" class="px-3 py-1 bg-rose-500 hover:bg-rose-700 rounded-lg transition"><i class="fa-solid fa-trash"></i> Đặt lại</button>
-                    <button class="px-3 py-1 bg-indigo-500 hover:bg-indigo-700 rounded-lg transition"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+                    <button @click="${this.clear_quiz}" class="block px-3 py-1 bg-rose-500 hover:bg-rose-700 rounded-lg transition"><element-icon icon="trash"></element-icon> Đặt lại</button>
+                    <button @click="${this.save}" class="block px-3 py-1 bg-indigo-500 hover:bg-indigo-700 rounded-lg transition"><element-icon icon="save"></element-icon> Lưu</button>
                 </div>
             </element-navbar>
+
+            <element-notify-container class="fixed block top-16 w-full md:w-3/4 lg:w-2/3 right-1/2 translate-x-1/2 z-120"></element-notify-container>
 
             <div class="pt-16">
                 <element-sidebar ${ref(this.sidebarRef)}></element-sidebar>
@@ -140,9 +155,13 @@ export class PageEditor extends LitElement {
                     <h1 class="text-2xl font-bold text-default-text mb-4">Danh sách câu hỏi</h1>
                     <div ${ref(this.questionsRef)} class="grid grid-cols-1 gap-4"></div>
                     <div class="w-full flex items-center justify-center mt-3">
-                        <button @click="${this.add_question}" class="py-3 w-4/5 text-default-text-sub hover:text-indigo-500 border border-dashed border-gray-700 hover:border-indigo-500 rounded-lg text-center transition-colors mt-3">
-                            <i class="fa-solid fa-plus"></i> Thêm câu hỏi
-                        </button>
+                        <div class="group relative py-3 w-4/5 border focus-within:text-indigo-500 border-dashed border-gray-700 hover:border-indigo-500 focus-within:border-indigo-500 rounded-lg text-center transition-colors mt-3" tabindex="0">
+                            <span class="group-hover:hidden group-focus-within:hidden text-default-text-sub hover:text-indigo-500"><element-icon icon="add"></element-icon> Thêm câu hỏi</span>
+                            <div class="hidden group-hover:grid group-focus-within:grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <button @click="${() => this.add_question('multi_choice')}" class="grow text-center h-full text-default-text-sub hover:text-indigo-500 transition"><element-icon icon="list-circle"></element-icon> Câu hỏi nhiều lựa chọn</button>
+                                <button @click="${() => this.add_question('true_false')}" class="grow text-center h-full text-default-text-sub hover:text-indigo-500 transition"><element-icon icon="checkmark-circle"></element-icon> Câu hỏi đúng/sai</button>
+                            </div>
+                        </div>
                     </div>
                 </main>
             </div>

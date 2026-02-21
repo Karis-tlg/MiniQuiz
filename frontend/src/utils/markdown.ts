@@ -2,6 +2,7 @@ import { Marked } from "marked"
 import { markedHighlight } from "marked-highlight"
 import hljs from "highlight.js"
 import MarkedKatex from "marked-katex-extension"
+import DOMPurify from "dompurify"
 
 export class Markdown{
     private marked: Marked
@@ -13,10 +14,12 @@ export class Markdown{
     }
     
     parseMarkdown(markdown: string): string {
-        return this.marked.parse(markdown, { async: false, gfm: true, breaks: true })
+        const html = this.marked.parse(markdown, { async: false, gfm: true, breaks: true })
+        return DOMPurify.sanitize(html)
     }
 
     async parseMarkdownAsync(markdown: string): Promise<string> {
-        return await this.marked.parse(markdown, { async: true, gfm: true, breaks: true })
+        const html = await this.marked.parse(markdown, { async: true, gfm: true, breaks: true })
+        return DOMPurify.sanitize(html)
     }
 }

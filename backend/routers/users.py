@@ -4,7 +4,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Request, Response, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 from typing import Annotated
-from ..utils.auth import Auth
+from ..utils.auth import auth_manager
 from ..utils.mail import MailClient
 from ..utils.models import UserResponse, UserCreate, UserLogin
 from ..utils.database import Database
@@ -14,8 +14,6 @@ router = APIRouter(
     tags=["Auth"],
     responses={404: {"description": "Not found"}},
 )
-
-auth_manager = Auth()
 
 @router.get("/", response_model=UserResponse)
 async def get_user(user: Annotated[UserResponse, Depends(auth_manager.get_current_user)]):
@@ -37,11 +35,11 @@ async def create_user(request: Request, user: UserCreate, turnstile_token: str):
         raise HTTPException(status_code=401, detail="Bạn đã đăng nhập")
     if await db.get_user_by_email(user.email) is not None:
         raise HTTPException(status_code=400, detail="Email đã tồn tại")
-    if re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", user.email) is None:
+    if re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,256}$", user.email) is None:
         raise HTTPException(status_code=400, detail="Email không hợp lệ")
-    if re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=]).{8,}$", user.password) is None:
+    if re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=]).{8,128}$", user.password) is None:
         raise HTTPException(status_code=400, detail="Mật khẩu không hợp lệ")
-    if re.match(r"^[a-zA-Z0-9]{4,}$", user.username) is None:
+    if re.match(r"^[a-zA-Z0-9]{4,32}$", user.username) is None:
         raise HTTPException(status_code=400, detail="Tên người dùng không hợp lệ")
     user.password = auth_manager.get_password_hash(user.password)
     user_data = user.model_dump(by_alias=True)
@@ -103,7 +101,7 @@ async def reset_password(request: Request, token: str, password: str, turnstile_
     token_data = auth_manager.decode_access_token(token)
     if not token_data or token_data.get("type") != "reset_password":
         raise HTTPException(status_code=400, detail="Yêu cầu thay đổi mật khẩu không hợp lệ")
-    if re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=]).{8,}$", password) is None:
+    if re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=]).{8,128}$", password) is None:
         raise HTTPException(status_code=400, detail="Mật khẩu không hợp lệ")
     email = token_data.get("email")
     await db.update_user(email, {"password": auth_manager.get_password_hash(password)})

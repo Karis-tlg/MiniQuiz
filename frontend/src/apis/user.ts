@@ -29,12 +29,12 @@ export async function logoutUser() {
     return await fetch(`/api/user/logout`, { method: "POST", credentials: 'include' }).then(res => res.json())
 }
 
-export async function getUserData() {
-    return await fetch(`/api/user`, { method: "GET", credentials: 'include' }).then(res => res.json())
+export async function getUserData(): Promise<User>{
+    return await fetch(`/api/user`, { method: "GET", credentials: 'include' }).then(res => res.json()).catch(() => null)
 }
 
 export async function hasUserLogged() {
-    return await fetch(`/api/user/logged-in`, { method: "GET", credentials: 'include' }).then(res => res.json()).then(data => data["logged_in"])
+    return await fetch(`/api/user/logged-in`, { method: "GET", credentials: 'include' }).then(res => res.json()).then(data => data["logged_in"]).catch(() => false)
 }
 
 export async function deleteUser() {

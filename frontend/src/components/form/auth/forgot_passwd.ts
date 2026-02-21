@@ -39,7 +39,7 @@ export class ElementForgotPasswdForm extends LitElement {
     protected render() {
         return html`
             <form class="flex flex-col gap-y-4">
-                <element-input ${ref(this.emailIRef)} label="Email" icon="fa-envelope" placeholder="Nhập email lấy lại mật khẩu" type="email" autocomplete="email"></element-input>
+                <element-input ${ref(this.emailIRef)} label="Email" icon="mail" placeholder="Nhập email lấy lại mật khẩu" type="email" autocomplete="email"></element-input>
               
                 <button @click=${this.submit} type="button" class="w-full mt-4 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-700 text-white font-semibold">
                     Gửi yêu cầu

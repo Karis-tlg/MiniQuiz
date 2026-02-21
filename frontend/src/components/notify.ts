@@ -23,13 +23,13 @@ export class ElementNotify extends LitElement {
     get_color() {
         switch (this.type) {
             case "error":
-                return "bg-red-500/75"
+                return "bg-red-500/50"
             case "warning":
-                return "bg-yellow-500/75"
+                return "bg-yellow-500/50"
             case "success":
-                return "bg-green-500/75"
+                return "bg-green-500/50"
             default:
-                return "bg-blue-500/75"
+                return "bg-blue-500/50"
         }
     }
 
@@ -37,13 +37,13 @@ export class ElementNotify extends LitElement {
     get_icon() {
         switch (this.type) {
             case "error":
-                return "fa-circle-xmark"
+                return "alert-circle"
             case "warning":
-                return "fa-triangle-exclamation"
+                return "warning"
             case "success":
-                return "fa-circle-check"
+                return "checkmark-circle"
             default:
-                return "fa-circle-info"
+                return "infomation-circle"
         }
     }
 
@@ -51,7 +51,7 @@ export class ElementNotify extends LitElement {
         return html`
             <div class="flex items-center justify-between rounded-lg px-4 py-2 ${this.get_color()} backdrop-blur-lg ${this.duration > 0 ? 'animate-[fade-out_var(--duration)_linear_forwards]' : ''}" style="--duration: ${this.duration}s">
                 <div class="flex items-center gap-x-3">
-                    <i class="fa-solid ${this.get_icon()}"></i>
+                    <element-icon icon="${this.get_icon()}"></element-icon>
                     <p>${this.message}</p>
                 </div>
                 <button @click="${() => this.remove()}" class="hover:text-white/25"><i class="fa-solid fa-xmark"></i></button>
