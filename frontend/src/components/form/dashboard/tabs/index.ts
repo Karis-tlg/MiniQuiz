@@ -1,1 +1,5 @@
 import "./overview"
+import "./editor"
+import "./history"
+import "./explore"
+import "./account"

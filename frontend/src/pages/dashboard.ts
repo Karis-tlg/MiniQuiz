@@ -52,6 +52,10 @@ export class PageDashboard extends LitElement {
 
             <main class="mt-14 md:ml-80 lg:ml-80 py-1 px-3">
                 <element-tab-overview .hidden=${this.currentTab !== "overview"}></element-tab-overview>
+                <element-tab-editor .hidden=${this.currentTab !== "editor"}></element-tab-editor>
+                <element-tab-history .hidden=${this.currentTab !== "history"}></element-tab-history>
+                <element-tab-explore .hidden=${this.currentTab !== "explore"}></element-tab-explore>
+                <element-tab-account .hidden=${this.currentTab !== "account"}></element-tab-account>
             </main>
         `
     }

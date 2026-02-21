@@ -18,12 +18,32 @@ export class ElementTabOverview extends LitElement {
 
     protected render() {
         return html`
-            <div class="p-4 w-full rounded-lg shadow shadow-gray-800 border border-gray-700">
-                <span class="text-sm text-indigo-300"><element-icon icon="leaf"></element-icon> Chào Buổi ${this.getTimeOfDay()}</span>
-                <p class="text-lg text-default-text-sub mt-2">Tiếp tục hành trình nào!</p>
-                <div class="flex items-center flex-nowarp mt-3">
-                    <input class="w-full max-w-lg px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-700 focus:ring-0" placeholder="Nhập mã tham gia quiz" />
-                    <button class="px-5 py-1.5 ml-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg transition"><element-icon icon="arrow-forward"></element-icon></button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="p-4 w-w-full rounded-lg shadow shadow-gray-800 border border-gray-700">
+                    <span class="text-sm text-indigo-300"><element-icon icon="leaf"></element-icon> Chào Buổi ${this.getTimeOfDay()}</span>
+                    <p class="text-lg text-default-text-sub mt-2">Tiếp tục hành trình nào!</p>
+                    <div class="flex items-center flex-nowarp mt-3">
+                        <input class="w-full max-w-lg px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-700 focus:ring-0" placeholder="Nhập mã tham gia quiz" />
+                        <button class="px-5 py-1.5 ml-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg transition"><element-icon icon="arrow-forward"></element-icon></button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-4 w-full rounded-lg shadow shadow-gray-800 border border-gray-700">
+                        <div class="text-indigo-500 p-3 rounded-lg bg-indigo-500/10 flex items-center justify-center w-fit">
+                            <element-icon icon="bulb"></element-icon>
+                        </div>
+                        <span class="text-3xl font-bold text-default-text-sub mt-3">21</span>
+                        <p class="text-gray-500">Quiz đã tạo</p>
+                        <div class="w-full bg-linear-to-r from-indigo-500/50 to-sky-500/25 h-1 rounded-full mt-3"></div>
+                    </div>
+                    <div class="p-4 w-full rounded-lg shadow shadow-gray-800 border border-gray-700">
+                        <div class="text-green-500 p-3 rounded-lg bg-green-500/10 flex items-center justify-center w-fit">
+                            <element-icon icon="checkmark-done"></element-icon>
+                        </div>
+                        <span class="text-3xl font-bold text-default-text-sub mt-3">58</span>
+                        <p class="text-gray-500">Quiz đã làm</p>
+                        <div class="w-full bg-linear-to-r from-indigo-500/50 to-sky-500/25 h-1 rounded-full mt-3"></div>
+                    </div>
                 </div>
             </div>
         `
