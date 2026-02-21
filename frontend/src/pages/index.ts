@@ -15,19 +15,19 @@ export class PageIndex extends LitElement {
         return html`
             <element-navbar></element-navbar>
 
-            <section id="hero-card" class="grid max-w-7xl mx-auto text-center md:text-start px-6 py-24 md:grid-cols-2 gap-16 items-center">
+            <main id="hero-card" class="grid max-w-7xl mx-auto text-center md:text-start px-6 py-24 md:grid-cols-2 gap-16 items-center">
                 <div>
                     <h1 class="text-4xl md:text-5xl mx-auto font-extrabold leading-tight">Tạo & Làm câu hỏi ngắn với <span class="text-indigo-400">MiniQuiz</span></h1>
                     <p class="mt-6 text-default-text-sub text-lg">Nền tảng tạo quiz nhỏ gọn, hiện đại và thú vị. Phù hợp cho học tập và ôn luyện kiến thức.</p>
                     <div class="mt-10 flex gap-4 justify-center md:justify-start">
-                        <a href="#start" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium">Bắt đầu ngay</a>
+                        <a href="/auth" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium">Bắt đầu ngay</a>
                         <a href="#features" class="px-6 py-3 rounded-xl border border-gray-700 hover:border-indigo-500">Xem tính năng</a>
                     </div>
                 </div>
                 <img class="max-w-lg mx-auto hidden md:block pointer-events-none" src="${questionsIllustration}" alt="Questions Illustration">
-            </section>
+            </main>
 
-            <section id="features" class="max-w-7xl mx-auto px-6 py-24">
+            <section id="features" role="region" class="max-w-7xl mx-auto px-6 py-24">
                 <h2 class="text-3xl font-bold text-center mb-16">Tính năng nổi bật</h2>
                 <div class="grid md:grid-cols-3 gap-8">
                     <div class="bg-card p-6 rounded-2xl border border-gray-800">
@@ -45,7 +45,7 @@ export class PageIndex extends LitElement {
                 </div>
             </section>
 
-            <section id="start" class="max-w-7xl mx-auto px-6 py-24 text-center">
+            <section id="start" role="region" class="max-w-7xl mx-auto px-6 py-24 text-center">
                 <div class="bg-linear-to-br from-indigo-600/20 to-indigo-400/5 border border-indigo-500/30 rounded-3xl p-16">
                     <h2 class="text-3xl font-bold mb-6">Sẵn sàng thử MiniQuiz?</h2>
                     <p class="text-gray-400 mb-10">Bắt đầu tạo quiz đầu tiên của bạn chỉ trong vài phút.</p>
@@ -63,11 +63,11 @@ export class PageIndex extends LitElement {
                 </div>
             </section>
 
-            <footer class="border-t border-gray-800 py-8 text-center text-sm text-gray-500">
+            <footer role="contentinfo" class="border-t border-gray-700 py-8 text-center text-sm text-gray-400">
                 <p class="mt-4 text-center">
-                    <a href="/legal" class="text-gray-500 hover:text-gray-200 transition">Terms of Service</a>
+                    <a href="/legal" class="hover:text-gray-200 transition">Terms of Service</a>
                     <span class="mx-2">·</span>
-                    <a href="/legal" class="text-gray-500 hover:text-gray-200 transition">Privacy Policy</a>
+                    <a href="/legal" class="hover:text-gray-200 transition">Privacy Policy</a>
                 </p>
                 © 2026 MiniQuiz. All rights reserved.
             </footer>
