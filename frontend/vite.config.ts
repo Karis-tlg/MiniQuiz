@@ -21,6 +21,7 @@ export default defineConfig({
                 '404': '404.html',
                 auth: 'auth.html',
                 index: 'index.html',
+                dashboard: 'dashboard.html',
                 editor: 'editor.html',
                 legal: 'legal.html'
             }
