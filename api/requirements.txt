@@ -3,6 +3,7 @@ pymongo[srv]
 pwdlib[argon2]
 pyjwt
 pydantic[email]
+python-multipart
 Authlib
 itsdangerous
 httpx
