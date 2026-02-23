@@ -22,7 +22,7 @@ export class ElementIcon extends LitElement {
 
     render() {
         return html`
-            <span class="fill-current stroke-current inline-block align-text-bottom" style="width: ${this.size*0.25}rem; height: ${this.size*0.25}rem;">
+            <span class="inline-flex justify-center items-center fill-current stroke-current align-text-bottom" style="width: ${this.size*0.25}rem; height: ${this.size*0.25}rem;">
                 ${unsafeSVG(this.src)}
             </span>
         `

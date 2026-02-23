@@ -6,5 +6,7 @@ declare global {
         email: string
         avatar: string
         disabled: boolean
+        role: "member" | "admin"
+        createAt: string
     }
 }

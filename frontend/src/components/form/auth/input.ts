@@ -11,6 +11,8 @@ export class ElementInput extends LitElement {
     @property() autocomplete: any | string = "off"
     @property() regex_type: "email" | "password" | "username" | "off" = "off"
     @property() type: "text" | "email" | "password" | "number" | "tel" | "url" | "search" = "text"
+    @property({ type: Boolean }) disabled: boolean = false
+    @property() value: string = ""
     private inputRef: Ref<HTMLInputElement> = createRef()
     private iconpwdRef: Ref<ElementIcon> = createRef()
 
@@ -108,7 +110,7 @@ export class ElementInput extends LitElement {
                             <element-icon icon="${this.icon}" class="translate-y-0.5"></element-icon>
                         </div>
                     ` : null}
-                    <input ${ref(this.inputRef)} @input=${this.inputRegexCheck} @change=${(e: Event) => {if(this.regex_type !== "off") (e.currentTarget as HTMLInputElement).reportValidity()}} autocomplete=${this.autocomplete} type="${this.type}" placeholder="${this.placeholder}" class="mt-1 w-full px-8 py-3 rounded-xl bg-gray-800 border border-gray-700 focus:outline-none focus:ring-0 focus:valid:border-indigo-500 ${this.regex_type !== "off" ? 'invalid:border-red-500' : ''}" />
+                    <input ${ref(this.inputRef)} @input=${this.inputRegexCheck} @change=${(e: Event) => {if(this.regex_type !== "off") (e.currentTarget as HTMLInputElement).reportValidity()}} ?disabled=${this.disabled} autocomplete=${this.autocomplete} type="${this.type}" placeholder="${this.placeholder}" class="mt-1 w-full px-8 py-3 rounded-xl bg-gray-800 border border-gray-700 focus:outline-none focus:ring-0 focus:valid:border-indigo-500 ${this.regex_type !== "off" ? 'invalid:border-red-500' : ''} disabled:cursor-not-allowed disabled:text-gray-400" .value="${this.value}"/>
                     ${ this.type === "password" ? html`
                         <button @click=${() => requestAnimationFrame(() => this.togglePasswordVisibility())} type="button" class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200">
                             <element-icon ${ref(this.iconpwdRef)} icon="eye-off" class="translate-y-0.5"></element-icon>

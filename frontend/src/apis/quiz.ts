@@ -1,3 +1,7 @@
+export async function getQuizStats() {
+    const data = await fetch(`/api/quizzes/stats`, { credentials: 'include' }).then(res => res.json())
+    return { created: data.quiz_created, done: data.quiz_done }
+}
 
 export async function getQuizEditorData(id: string) {
     return await fetch(`/api/quizzes/${id}/editor`).then(res => res.json())

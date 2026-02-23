@@ -33,9 +33,9 @@ async def create_user(request: Request, user: UserCreate, turnstile_token: str):
     mail: MailClient = request.app.state.mail
     if await auth_manager.has_user_logged_in(request):
         raise HTTPException(status_code=401, detail="Bạn đã đăng nhập")
-    if await db.get_user_by_email(user.email) is not None:
+    if await db.get_user_by_email(user.email.lower()) is not None:
         raise HTTPException(status_code=400, detail="Email đã tồn tại")
-    if re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,256}$", user.email) is None:
+    if re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,256}$", user.email.lower()) is None:
         raise HTTPException(status_code=400, detail="Email không hợp lệ")
     if re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=]).{8,128}$", user.password) is None:
         raise HTTPException(status_code=400, detail="Mật khẩu không hợp lệ")
@@ -45,7 +45,7 @@ async def create_user(request: Request, user: UserCreate, turnstile_token: str):
     user_data = user.model_dump(by_alias=True)
     user_data["type"] = "create_user"
     verify_token = auth_manager.create_access_token(user_data, timedelta(minutes=30))
-    await mail.send_mail("Xác minh tài khoản", user.email, 6002, {"username": user.username, "url": f"https://miniquizzes.vercel.app/api/auth/verify?token={verify_token}"})
+    await mail.send_mail("Xác minh tài khoản", user.email.lower(), 6002, {"username": user.username, "url": f"https://miniquizzes.vercel.app/api/auth/verify?token={verify_token}"})
     return {"status": "success", "message": "Vui lòng xác minh email bằng liên kết đã được gửi tới hòm thư"}
 
 @router.get("/verify")

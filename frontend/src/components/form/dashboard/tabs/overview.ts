@@ -1,8 +1,10 @@
 import { LitElement, html } from "lit"
-import { customElement } from "lit/decorators.js"
+import { customElement, property } from "lit/decorators.js"
 
 @customElement("element-tab-overview")
 export class ElementTabOverview extends LitElement {
+    @property({ attribute: false }) stats!: { created: number, done: number }
+
     protected createRenderRoot(): HTMLElement | DocumentFragment {
         return this
     }
@@ -29,20 +31,28 @@ export class ElementTabOverview extends LitElement {
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="p-4 w-full rounded-lg shadow shadow-gray-800 border border-gray-700">
-                        <div class="text-indigo-500 p-3 rounded-lg bg-indigo-500/10 flex items-center justify-center w-fit">
-                            <element-icon icon="bulb"></element-icon>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-3xl font-bold text-default-text-sub mt-3">${this.stats?.created}</span>
+                                <p class="text-gray-500">Quiz đã tạo</p>
+                            </div>
+                            <div class="text-indigo-500 p-3 rounded-lg bg-indigo-500/10 flex items-center justify-center w-20 h-20">
+                                <element-icon icon="bulb"></element-icon>
+                            </div>
                         </div>
-                        <span class="text-3xl font-bold text-default-text-sub mt-3">21</span>
-                        <p class="text-gray-500">Quiz đã tạo</p>
-                        <div class="w-full bg-linear-to-r from-indigo-500/50 to-sky-500/25 h-1 rounded-full mt-3"></div>
+                        <div class="w-full bg-linear-to-r from-indigo-500/50 to-sky-500/25 h-1 rounded-full mt-5"></div>
                     </div>
                     <div class="p-4 w-full rounded-lg shadow shadow-gray-800 border border-gray-700">
-                        <div class="text-green-500 p-3 rounded-lg bg-green-500/10 flex items-center justify-center w-fit">
-                            <element-icon icon="checkmark-done"></element-icon>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-3xl font-bold text-default-text-sub mt-3">${this.stats?.done}</span>
+                                <p class="text-gray-500">Quiz đã làm</p>
+                            </div>
+                            <div class="text-green-500 p-3 rounded-lg bg-green-500/10 flex items-center justify-center w-20 h-20">
+                                <element-icon icon="checkmark-done"></element-icon>
+                            </div>
                         </div>
-                        <span class="text-3xl font-bold text-default-text-sub mt-3">58</span>
-                        <p class="text-gray-500">Quiz đã làm</p>
-                        <div class="w-full bg-linear-to-r from-indigo-500/50 to-sky-500/25 h-1 rounded-full mt-3"></div>
+                        <div class="w-full bg-linear-to-r from-indigo-500/50 to-sky-500/25 h-1 rounded-full mt-5"></div>
                     </div>
                 </div>
             </div>
