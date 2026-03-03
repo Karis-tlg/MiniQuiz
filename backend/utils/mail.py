@@ -10,7 +10,7 @@ class MailClient:
                 json={
                     "from": {
                         "display_name": "MiniQuiz",
-                        "address": "no-reply@4aff3d588fbcb262.maileroo.org"
+                        "address": "no-reply@miniquiz.xyz"
                     },
                     "to": {
                         "address": to
