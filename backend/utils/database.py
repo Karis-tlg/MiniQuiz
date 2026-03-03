@@ -1,6 +1,7 @@
 import os
 from typing import Literal
 from datetime import datetime, timezone
+from bson import ObjectId
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
 
 class Database:
@@ -36,10 +37,10 @@ class Database:
     async def create_quiz(self, data: dict):
         return await self.quizzes.insert_one(data)
     
-    async def update_quiz(self, quiz_id: str, data: dict):
-        return await self.quizzes.update_one({"_id": quiz_id}, {"$set": data})
+    async def update_quiz(self, quiz_id: ObjectId, author: ObjectId, data: dict):
+        return await self.quizzes.update_one({"_id": quiz_id, "author": author}, {"$set": {key: value for key, value in data.items() if key != "_id" and key != "author"}})
     
-    async def delete_quiz(self, quiz_id: str):
+    async def delete_quiz(self, quiz_id: ObjectId):
         return await self.quizzes.delete_one({"_id": quiz_id})
 
     async def close(self):

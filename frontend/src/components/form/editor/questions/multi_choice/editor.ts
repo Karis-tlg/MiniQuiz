@@ -3,7 +3,7 @@ import { html } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import { createRef, ref, type Ref } from "lit/directives/ref.js"
 import { type ElementEditorInputMarkdown } from "../../input_markdown"
-import { uploadImage } from "../../../../../apis/quiz"
+import { ImagesManager } from "../../../../../utils/images-manager"
 
 @customElement("element-question-editor-multi_choice-option")
 export class ElementEditorMultiChoiceOption extends ElementEditorBase {
@@ -65,8 +65,8 @@ export class ElementEditorMultiChoice extends ElementEditorBase {
         const file = (event.target as HTMLInputElement).files?.[0]
         if (!file) return
 
-        const res = await uploadImage(file)
-        this.questionRef.value?.add_line(`![${file.name}](${res.url})`)
+        const fileID = await ImagesManager.saveImage(file)
+        this.questionRef.value?.add_line(`![${file.name}](${fileID})`)
     }
 
     async add_option(id?: string, label?: string, correct?: boolean) {
@@ -95,7 +95,7 @@ export class ElementEditorMultiChoice extends ElementEditorBase {
                     </div>
                 </div>
 
-                <element-editor-input_markdown ${ref(this.questionRef)} value="${this.question}"></element-editor-input_markdown>
+                <element-editor-input_markdown ${ref(this.questionRef)} value="${this.question}" minHeight="4"></element-editor-input_markdown>
 
                 <div class="mb-2 mt-4">
                     <p class="text-default-text-sub uppercase text-sm font-semibold mt-4">Đáp án</p>

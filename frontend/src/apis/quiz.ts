@@ -3,28 +3,22 @@ export async function getQuizStats() {
     return { created: data.quiz_created, done: data.quiz_done }
 }
 
-export async function getQuizEditorData(id: string) {
-    return await fetch(`/api/quizzes/${id}/editor`).then(res => res.json())
+export async function newQuiz() {
+    const data = await fetch(`/api/quizzes/new`, { method: 'POST', credentials: 'include' }).then(res => res.json())
+    return data.quiz_id
 }
 
-export async function getQuizData(id: string) {
-    return await fetch(`/api/quizzes/${id}/data`).then(res => res.json())
+export async function updateQuiz(quizId: string, data: any) {
+    const result = await fetch(`/api/quizzes/${quizId}/update`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(res => res.json())
+    return result
 }
 
-export async function uploadImage(file: File) {
-    const form = new FormData()
-    form.append('file', file)
-    return await fetch(`/api/quizzes/upload/image`, { method: "POST", body: form, credentials: 'include' }).then(res => res.json())
+export async function getQuizList(page: number) {
+    const data = await fetch(`/api/quizzes/page/${page}`, { credentials: 'include' }).then(res => res.json())
+    return { quizzes: data.quizzes, max_page: data.max_page }
 }
 
-export async function newQuiz(data: any) {
-    return await fetch(`/api/quizzes/new`, { method: "POST", body: JSON.stringify(data), credentials: 'include', headers: { 'Content-Type': 'application/json' } }).then(res => res.json())
-}
-
-export async function updateQuiz(id: string, data: any) {
-    return await fetch(`/api/quizzes/${id}/update`, { method: "POST", body: JSON.stringify(data) }).then(res => res.json())
-}
-
-export async function deleteQuiz(id: string) {
-    return await fetch(`/api/quizzes/${id}/delete`, { method: "POST" }).then(res => res.json())
+export async function getEditorData(quizId: string) {
+    const data = await fetch(`/api/quizzes/${quizId}/editor`, { credentials: 'include' }).then(res => res.json())
+    return data.data
 }

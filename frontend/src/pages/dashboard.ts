@@ -44,6 +44,21 @@ export class PageDashboard extends LitElement {
         this.requestUpdate()
     }
 
+    render_tab() {
+        switch (this.currentTab) {
+            case "overview":
+                return html`<element-tab-overview .stats=${this.quizStats}></element-tab-overview>`
+            case "editor":
+                return html`<element-tab-editor></element-tab-editor>`
+            case "history":
+                return html`<element-tab-history></element-tab-history>`
+            case "explore":
+                return html`<element-tab-explore></element-tab-explore>`
+            case "account":
+                return html`<element-tab-account .stats=${this.quizStats} .user=${this.user!}></element-tab-account>`
+        }
+    }
+
     render() {
         return html`
             <element-navbar>
@@ -56,11 +71,7 @@ export class PageDashboard extends LitElement {
 
             ${this.user && this.quizStats ? html`
                 <main class="mt-14 md:ml-80 lg:ml-80 py-1 px-3">
-                    <element-tab-overview .stats=${this.quizStats} .hidden=${this.currentTab !== "overview"}></element-tab-overview>
-                    <element-tab-editor .hidden=${this.currentTab !== "editor"}></element-tab-editor>
-                    <element-tab-history .hidden=${this.currentTab !== "history"}></element-tab-history>
-                    <element-tab-explore .hidden=${this.currentTab !== "explore"}></element-tab-explore>
-                    <element-tab-account .stats=${this.quizStats} .user=${this.user} .hidden=${this.currentTab !== "account"}></element-tab-account>
+                    ${this.render_tab()}
                 </main>
                 ` : html`
                 <div class="w-full h-screen flex items-center justify-center">

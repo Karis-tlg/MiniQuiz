@@ -49,12 +49,12 @@ export class ElementNotify extends LitElement {
 
     render() {
         return html`
-            <div class="flex items-center justify-between rounded-lg px-4 py-2 ${this.get_color()} backdrop-blur-lg ${this.duration > 0 ? 'animate-[fade-out_var(--duration)_linear_forwards]' : ''}" style="--duration: ${this.duration}s">
+            <div class="relative flex items-center justify-between rounded-lg px-4 py-2 ${this.get_color()} backdrop-blur-lg ${this.duration > 0 ? 'animate-[fade-out_var(--duration)_linear_forwards]' : ''}" style="--duration: ${this.duration}s">
                 <div class="flex items-center gap-x-3">
                     <element-icon icon="${this.get_icon()}"></element-icon>
                     <p>${this.message}</p>
                 </div>
-                <button @click="${() => this.remove()}" class="hover:text-white/25"><i class="fa-solid fa-xmark"></i></button>
+                <button @click="${() => this.remove()}" class="hover:text-white/25"><element-icon icon="close"></element-icon></button>
                 <div class="w-full h-0.5 bg-gray-300 absolute left-0 bottom-0 ${this.duration > 0 ? 'animate-[countdown_var(--duration)_linear_forwards]' : 'hidden'}" style="--duration: ${this.duration}s"></div>
             </div>
         `

@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://miniquizzes.vercel.app/</loc>
+    <loc>https://miniquiz.xyz/</loc>
     <lastmod>2026-02-21</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://miniquizzes.vercel.app/auth</loc>
+    <loc>https://miniquiz.xyz/auth</loc>
     <lastmod>2026-02-21</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://miniquizzes.vercel.app/legal</loc>
+    <loc>https://miniquiz.xyz/legal</loc>
     <lastmod>2026-02-21</lastmod>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://miniquiz.xyz/dashboard</loc>
+    <lastmod>2026-02-21</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://miniquiz.xyz/editor</loc>
+    <lastmod>2026-02-21</lastmod>
+    <priority>0.6</priority>
 </urlset>

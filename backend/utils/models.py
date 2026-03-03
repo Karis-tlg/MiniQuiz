@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pydantic import BaseModel, EmailStr, HttpUrl
+from pydantic import BaseModel, EmailStr, Field, HttpUrl
 from typing import Dict, List, Literal, Callable, Type, Any
 from datetime import datetime
 from bson import ObjectId
@@ -67,11 +67,11 @@ class QuizQuestion(BaseModel):
     answer: str | Dict[str, str]
 
 class QuizRandomize(BaseModel):
-    questions: bool
-    options: bool
+    questions: bool = True
+    options: bool = True
 
 class QuizCreate(BaseModel):
-    _id: str
+    id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
     title: str
     randomize: QuizRandomize
     questions: List[QuizQuestion]

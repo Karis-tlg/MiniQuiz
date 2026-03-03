@@ -6,11 +6,12 @@ import "../components/navbar"
 import "../components/notify"
 import { ElementSidebar } from"../components/form/editor/sidebar"
 import { ElementEditorMultiChoice } from "../components/form/editor/questions/multi_choice/editor"
-import { getQuizEditorData, newQuiz } from "../apis/quiz"
+import { getEditorData, updateQuiz } from "../apis/quiz"
 import { hasUserLogged } from "../apis/user"
 
 @customElement("page-editor")
 export class PageEditor extends LitElement {
+    loadingRef: Ref<HTMLElement> = createRef()
     sidebarRef: Ref<ElementSidebar> = createRef()
     mainRef: Ref<HTMLElement> = createRef()
     questionsRef: Ref<HTMLElement> = createRef()
@@ -24,13 +25,6 @@ export class PageEditor extends LitElement {
     async connectedCallback() {
         super.connectedCallback()
         if (!await hasUserLogged()) window.location.href = "/auth"
-    }
-
-    firstUpdated() {
-        const local_data = sessionStorage.getItem("quiz")
-        const load_quiz_id = new URLSearchParams(window.location.search).get("quiz")
-        if (load_quiz_id) getQuizEditorData(load_quiz_id).then(data => requestAnimationFrame(() => this.load_json(data)))
-        else if (local_data) requestAnimationFrame(() => this.load_json(JSON.parse(local_data)))
 
         window.addEventListener("beforeunload", (e) => {
             e.preventDefault()
@@ -56,6 +50,15 @@ export class PageEditor extends LitElement {
         })
     }
 
+    async firstUpdated() {
+        const local_data = sessionStorage.getItem("quiz")
+        const load_quiz_id = new URLSearchParams(window.location.search).get("quiz")
+        if (load_quiz_id) {
+            const data = local_data ? JSON.parse(local_data) : await getEditorData(load_quiz_id)
+            await this.load_json(data)
+        } else window.location.href = "/dashboard"
+    }
+
     updateIndexes() {
         const children = Array.from(this.questionsRef.value!.children) as ElementEditorMultiChoice[];
         children.forEach((child, i) => {
@@ -66,7 +69,6 @@ export class PageEditor extends LitElement {
             child.requestUpdate()
         });
     }
-
     toggle_sidebar() {
         requestAnimationFrame(() => {
             this.sidebarRef.value?.toggle()
@@ -100,8 +102,8 @@ export class PageEditor extends LitElement {
     async save() {
         const data = await this.export_json()
         await this.save_local(data)
-        const result = await newQuiz(data)
-        window.dispatchEvent(new CustomEvent("page-notify", { detail: { message: result.message + " (ID: " + result.id + ")", type: "success" } }))
+        const result = await updateQuiz(new URLSearchParams(window.location.search).get("quiz")!, data)
+        window.dispatchEvent(new CustomEvent("page-notify", { detail: { message: result.message, duration: 5, type: "success" } }))
     }
 
     async save_local(data?: any) {
@@ -120,6 +122,8 @@ export class PageEditor extends LitElement {
 
     async load_json(data: any) {
         await this.updateComplete
+
+        this.loadingRef.value?.classList.replace("hidden", "flex")
         this.clear_quiz()
 
         this.sidebarRef.value?.set_title(data.title)
@@ -134,11 +138,18 @@ export class PageEditor extends LitElement {
             this.questionsRef.value?.appendChild(new_question)
         })
 
+        this.updateIndexes()
+
+        this.loadingRef.value?.classList.replace("flex", "hidden")
         this.save_local()
     }
 
     protected render() {
         return html`
+            <div ${ref(this.loadingRef)} class="fixed top-0 left-0 z-250 flex items-center justify-center w-full h-screen bg-black/75 text-default-text">
+                <element-icon icon="loading" size="10" class="animate-spin"></element-icon>
+            </div>
+
             <element-navbar href="#">
                 <button slot="left" @click=${this.toggle_sidebar} class="lg:hidden text-lg text-default-text hover:text-indigo-500 transition"><i class="fa-solid fa-bars"></i></button>
                 <div slot="right" class="flex items-center gap-x-3">

@@ -2,6 +2,7 @@ import { LitElement, html } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import { createRef, ref, type Ref } from "lit/directives/ref.js"
 import { Markdown } from "../../../utils/markdown"
+import { ImagesManager } from "../../../utils/images-manager"
 
 @customElement("element-editor-input_markdown")
 export class ElementEditorInputMarkdown extends LitElement {
@@ -21,18 +22,38 @@ export class ElementEditorInputMarkdown extends LitElement {
         this.set_value(this.value)
     }
 
-    auto_resize(event: InputEvent) {
-        console.log(event)
-        if (event.inputType !== "deleteContentBackward" && event.inputType !== "insertLineBreak") return
-        const textarea = event.target as HTMLTextAreaElement
+    auto_resize(event?: InputEvent, force: boolean = false) {
+        if (!force && event && (event.inputType !== "deleteContentBackward" && event.inputType !== "insertLineBreak")) return
+        const textarea = this.textareaRef.value!
         textarea.style.height = "auto"
         textarea.style.height = textarea.scrollHeight + "px"
     }
 
-    render_markdown() {
+    async checkImages() {
+        const markdownText = this.textareaRef.value!.value
+        const images = await ImagesManager.getAllImages()
+        for (const fileID in images) {
+            if (!markdownText.includes(fileID)) {
+                await ImagesManager.deleteImage(fileID)
+            }
+        }
+    }
+
+    async render_markdown() {
         this.previewRef.value!.classList.add("animate-pulse")
         this.markdownParser.parseMarkdownAsync(this.textareaRef.value!.value).then((html: string) => {
             this.previewRef.value!.innerHTML = html
+            this.querySelectorAll("img[data-image]").forEach(async (img) => {
+                const imgElement = img as HTMLImageElement
+                const src = imgElement.getAttribute("data-image")!
+                const image = await ImagesManager.getImage(src)
+                if (image) {
+                    const objectURL = URL.createObjectURL(image.file)
+                    imgElement.setAttribute("src", objectURL)
+                    imgElement.removeAttribute("data-image")
+                    imgElement.onload = () => URL.revokeObjectURL(objectURL)
+                }
+            })
             this.previewRef.value!.classList.remove("animate-pulse")
         })
     }
@@ -40,6 +61,7 @@ export class ElementEditorInputMarkdown extends LitElement {
     toggle_textarea() {
         this.previewRef.value?.classList.add("hidden")
         this.textareaRef.value?.classList.remove("hidden")
+        this.auto_resize(undefined, true)
         this.textareaRef.value?.focus()
     }
 
