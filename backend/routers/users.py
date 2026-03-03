@@ -45,7 +45,7 @@ async def create_user(request: Request, user: UserCreate, turnstile_token: str):
     user_data = user.model_dump(by_alias=True)
     user_data["type"] = "create_user"
     verify_token = auth_manager.create_access_token(user_data, timedelta(minutes=30))
-    await mail.send_mail("Xác minh tài khoản", user.email.lower(), 6002, {"username": user.username, "url": f"https://miniquizzes.vercel.app/api/auth/verify?token={verify_token}"})
+    await mail.send_mail("Xác minh tài khoản", user.email.lower(), 6002, {"username": user.username, "url": f"https://miniquiz.xyz/api/auth/verify?token={verify_token}"})
     return {"status": "success", "message": "Vui lòng xác minh email bằng liên kết đã được gửi tới hòm thư"}
 
 @router.get("/verify")
@@ -81,7 +81,7 @@ async def logout_user(response: Response):
     return {"status": "success", "message": "Đăng xuất thành công"}
 
 @router.post("/forgot-password")
-async def forgot_password(request: Request, email: str, turnstile_token: str):
+async def forgot_password(request: Request, turnstile_token: str, email: str):
     if not await auth_manager.verify_cf_turnstile(turnstile_token):
         raise HTTPException(status_code=400, detail="Vui lòng xác minh captcha trước khi gửi yêu cầu thay đổi mật khâu")
     db: Database = request.app.state.db
@@ -90,7 +90,7 @@ async def forgot_password(request: Request, email: str, turnstile_token: str):
     if user_db is None:
         raise HTTPException(status_code=400, detail="Người dùng không tồn tại")
     verify_token = auth_manager.create_access_token({"type": "reset_password", "email": email}, timedelta(minutes=30))
-    await mail.send_mail("Thay đổi mật khẩu", email, 6008, {"username": user_db["username"], "url": f"https://miniquizzes.vercel.app/api/auth?form=3&token={verify_token}"})
+    await mail.send_mail("Thay đổi mật khẩu", email, 6008, {"username": user_db["username"], "url": f"https://miniquiz.xyz/api/auth?form=3&token={verify_token}"})
     return {"status": "success", "message": "Email đã được gửi tới hòm thư, vui lòng truy cập liên kết trong email để thay đổi mật khẩu"}
 
 @router.post("/reset-password")

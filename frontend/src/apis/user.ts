@@ -32,8 +32,7 @@ export async function logoutUser() {
 export async function getUserData(): Promise<User | null> {
     const response = await fetch(`/api/user`, { method: "GET", credentials: "include" })
     if (!response.ok) return null
-    const data = await response.json()
-    return data
+    return await response.json() as User
 }
 
 export async function hasUserLogged() {

@@ -70,7 +70,7 @@ class Auth:
             return False
         return await db.has_user(user_email)
 
-    async def verify_cf_turnstile(turnstile_token: str) -> bool:
+    async def verify_cf_turnstile(self, turnstile_token: str) -> bool:
         async with AsyncClient() as client:
             response = await client.post(
                 "https://challenges.cloudflare.com/turnstile/v0/siteverify",
