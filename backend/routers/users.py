@@ -5,8 +5,9 @@ from fastapi import APIRouter, Request, Response, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 from typing import Annotated
 from ..utils.auth import auth_manager
+from ..utils.limiter import limiter
 from ..utils.mail import MailClient
-from ..utils.models import UserResponse, UserCreate, UserLogin
+from ..utils.models import UserResponse, UserCreate, UserLogin, User
 from ..utils.database import Database
 
 router = APIRouter(
@@ -16,16 +17,17 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=UserResponse)
-async def get_user(user: Annotated[UserResponse, Depends(auth_manager.get_current_user)]):
+async def get_user(user: Annotated[User, Depends(auth_manager.get_current_user)]):
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return user
+    return UserResponse(**user.model_dump(by_alias=True))
 
 @router.get("/logged-in")
 async def is_logged_in(logged_in: Annotated[bool, Depends(auth_manager.has_user_logged_in)]):
     return {"logged_in": logged_in}
 
 @router.post("/register")
+@limiter.limit("3/10minute")
 async def create_user(request: Request, user: UserCreate, turnstile_token: str):
     if not await auth_manager.verify_cf_turnstile(turnstile_token):
         raise HTTPException(status_code=400, detail="Vui lòng xác minh captcha trước khi đăng ký")
@@ -49,6 +51,7 @@ async def create_user(request: Request, user: UserCreate, turnstile_token: str):
     return {"status": "success", "message": "Vui lòng xác minh email bằng liên kết đã được gửi tới hòm thư"}
 
 @router.get("/verify")
+@limiter.limit("5/10minute")
 async def verify_user(request: Request, token: str):
     db: Database = request.app.state.db
     user_data = auth_manager.decode_access_token(token)
@@ -59,6 +62,7 @@ async def verify_user(request: Request, token: str):
     return RedirectResponse("/auth?message=Tài khoản đã được tạo, đăng nhập để tiếp tục", status_code=302)
 
 @router.post("/login")
+@limiter.limit("5/10minute")
 async def login_user(request: Request, response: Response, user: UserLogin, turnstile_token: str):
     if not await auth_manager.verify_cf_turnstile(turnstile_token):
         raise HTTPException(status_code=400, detail="Vui lòng xác minh captcha trước khi đăng nhập")
@@ -76,11 +80,13 @@ async def login_user(request: Request, response: Response, user: UserLogin, turn
     return {"status": "success", "message": "Đăng nhập thành công"}
 
 @router.post("/logout")
+@limiter.limit("30/minute")
 async def logout_user(response: Response):
     response.delete_cookie("token")
     return {"status": "success", "message": "Đăng xuất thành công"}
 
 @router.post("/forgot-password")
+@limiter.limit("5/10minute")
 async def forgot_password(request: Request, turnstile_token: str, email: str):
     if not await auth_manager.verify_cf_turnstile(turnstile_token):
         raise HTTPException(status_code=400, detail="Vui lòng xác minh captcha trước khi gửi yêu cầu thay đổi mật khâu")
@@ -94,6 +100,7 @@ async def forgot_password(request: Request, turnstile_token: str, email: str):
     return {"status": "success", "message": "Email đã được gửi tới hòm thư, vui lòng truy cập liên kết trong email để thay đổi mật khẩu"}
 
 @router.post("/reset-password")
+@limiter.limit("10/10minute")
 async def reset_password(request: Request, token: str, password: str, turnstile_token: str):
     if not await auth_manager.verify_cf_turnstile(turnstile_token):
         raise HTTPException(status_code=400, detail="Vui lòng xác minh captcha trước khi thay đổi mật khâu")
@@ -108,22 +115,26 @@ async def reset_password(request: Request, token: str, password: str, turnstile_
     return {"status": "success", "message": "Thay đổi mật khẩu thành công"}
 
 @router.delete("/delete")
-async def delete_user(request: Request, user: Annotated[UserResponse, Depends(auth_manager.get_current_user)]):
+@limiter.limit("5/10minute")
+async def delete_user(request: Request, user: Annotated[User, Depends(auth_manager.get_current_user)]):
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     db: Database = request.app.state.db
-    await db.delete_user(user["email"])
+    await db.delete_user(user.email)
     return {"status": "success", "message": "User deleted"}
 
 @router.get("/discord/login")
+@limiter.limit("30/10minute")
 async def discord_login(request: Request):
     return await auth_manager.oauthlib.discord.authorize_redirect(request, redirect_uri=os.environ.get("DISCORD_REDIRECT_URI"))
 
 @router.get("/google/login")
+@limiter.limit("30/10minute")
 async def google_login(request: Request):
     return await auth_manager.oauthlib.google.authorize_redirect(request, redirect_uri=os.environ.get("GOOGLE_REDIRECT_URI"))
 
 @router.get("/discord/callback")
+@limiter.limit("60/10minute")
 async def discord_callback(request: Request):
     token = await auth_manager.oauthlib.discord.authorize_access_token(request)
     resp = await auth_manager.oauthlib.discord.get('users/@me', token=token)
@@ -146,6 +157,7 @@ async def discord_callback(request: Request):
     return response
 
 @router.get("/google/callback")
+@limiter.limit("60/10minute")
 async def google_callback(request: Request):
     token = await auth_manager.oauthlib.google.authorize_access_token(request)
     user_data = token.get("userinfo", {})

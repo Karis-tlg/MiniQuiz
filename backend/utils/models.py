@@ -55,6 +55,16 @@ class UserResponse(BaseModel):
     role: Literal["member", "admin"]
     createAt: datetime
 
+class User(BaseModel):
+    id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
+    username: str
+    email: EmailStr
+    avatar: HttpUrl
+    password: str
+    disabled: bool
+    role: Literal["member", "admin"]
+    createAt: datetime
+
 class QuizOption(BaseModel):
     id: str
     label: str
@@ -70,13 +80,13 @@ class QuizRandomize(BaseModel):
     questions: bool = True
     options: bool = True
 
-class QuizCreate(BaseModel):
-    id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
+class QuizData(BaseModel):
     title: str
     randomize: QuizRandomize
     questions: List[QuizQuestion]
 
-class Quiz(QuizCreate):
+class Quiz(QuizData):
+    id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
     author: PydanticObjectId
     createAt: datetime
     updateAt: datetime

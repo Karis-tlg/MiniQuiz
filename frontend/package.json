@@ -24,9 +24,6 @@
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.11",
     "typescript": "~5.9.3",
-    "vite": "npm:rolldown-vite@7.2.5"
-  },
-  "overrides": {
-    "vite": "npm:rolldown-vite@7.2.5"
+    "vite": "^8.0.0-beta.16"
   }
 }

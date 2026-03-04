@@ -2,10 +2,13 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from .utils.database import Database
 from .utils.mail import MailClient
 from .utils.storage import Storage
+from .utils.limiter import limiter, rate_limit_exceeded_handler
 from .routers import users
 from .routers import quizzes
 
@@ -20,8 +23,12 @@ app = FastAPI(docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url="
 
 app.state.db = db
 app.state.mail = mail
+app.state.limiter = limiter
 app.state.storage = storage
 
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SECRET_KEY"))
 app.add_middleware(
     CORSMiddleware,

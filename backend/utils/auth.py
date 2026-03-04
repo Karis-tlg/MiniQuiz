@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from authlib.integrations.starlette_client import OAuth
 from datetime import datetime, timedelta, timezone
 from .database import Database
+from .models import User
 
 class Auth:
     def __init__(self):
@@ -51,7 +52,7 @@ class Auth:
         except:
             return {}
 
-    async def get_current_user(self, request: Request):
+    async def get_current_user(self, request: Request) -> User | None:
         db: Database = request.app.state.db
         token = request.cookies.get("token")
         payload = self.decode_access_token(token)
@@ -59,7 +60,7 @@ class Auth:
         if user_email is None or payload.get("type") != "token":
             return
         user = await db.get_user_by_email(user_email)
-        return user
+        return User(**user) if user else None
 
     async def has_user_logged_in(self, request: Request) -> bool:
         db: Database = request.app.state.db

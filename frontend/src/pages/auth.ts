@@ -10,6 +10,7 @@ import googleLogo from "../assets/google.svg"
 import discordLogo from "../assets/discord.svg"
 import auth_illustration from "../assets/auth_illustration.svg"
 import { hasUserLogged } from "../apis/user"
+import { waitCloudflareTurnstile } from "../utils/utils"
 
 @customElement("page-auth")
 export class PageAuth extends LitElement {
@@ -22,9 +23,11 @@ export class PageAuth extends LitElement {
     }
 
     protected firstUpdated() {
-        this.turnstile_widgetId = turnstile.render(this.turnstileRef.value, {
-            sitekey: import.meta.env.VITE_CF_TURNSTILE_SITEKEY,
-            theme: "dark"
+        waitCloudflareTurnstile(5000).then(() => {
+            this.turnstile_widgetId = turnstile.render(this.turnstileRef.value, {
+                sitekey: import.meta.env.VITE_CF_TURNSTILE_SITEKEY,
+                theme: "dark"
+            })
         })
     }
 
@@ -116,4 +119,5 @@ declare global {
         "page-auth": PageAuth
     }
 }
+
 declare const turnstile: any;
