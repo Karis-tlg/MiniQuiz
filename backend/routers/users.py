@@ -20,7 +20,7 @@ router = APIRouter(
 async def get_user(user: Annotated[User, Depends(auth_manager.get_current_user)]):
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return UserResponse(**user.model_dump(by_alias=True))
+    return user
 
 @router.get("/logged-in")
 async def is_logged_in(logged_in: Annotated[bool, Depends(auth_manager.has_user_logged_in)]):
@@ -81,7 +81,7 @@ async def login_user(request: Request, response: Response, user: UserLogin, turn
 
 @router.post("/logout")
 @limiter.limit("30/minute")
-async def logout_user(response: Response):
+async def logout_user(request: Request, response: Response):
     response.delete_cookie("token")
     return {"status": "success", "message": "Đăng xuất thành công"}
 

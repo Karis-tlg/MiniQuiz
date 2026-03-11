@@ -1,9 +1,9 @@
-import { ElementEditorBase } from "../base/editor"
+import { ElementEditorBase } from "./base"
 import { html } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import { createRef, ref, type Ref } from "lit/directives/ref.js"
-import { type ElementEditorInputMarkdown } from "../../input_markdown"
-import { ImagesManager } from "../../../../../utils/images-manager"
+import { type ElementEditorInputMarkdown } from "../input_markdown"
+import { ImagesManager } from "../../../../utils/images-manager"
 
 @customElement("element-question-editor-multi_choice-option")
 export class ElementEditorMultiChoiceOption extends ElementEditorBase {

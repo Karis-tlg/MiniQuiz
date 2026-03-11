@@ -1,5 +1,7 @@
 import { openDB } from "idb"
 export class ImagesManager {
+    static images_data: any
+
     static async getFileID(file: File): Promise<string> {
         const buffer = await file.arrayBuffer()
         const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
@@ -44,7 +46,9 @@ export class ImagesManager {
         return images.map((record, idx) => ({ fileID: keys[idx] as string, file: record.file as File }))
     }
 
-    static async getImage(fileID: string): Promise<{ file: File, refcount: number } | null> {
+    static async getImage(fileID: string): Promise<{ file: File, refcount: number } | string | null> {
+        if (this.images_data.hasOwnProperty(fileID)) return this.images_data[fileID]
+
         const db = await openDB("miniquiz-db", 1, {
             upgrade: (db) => db.createObjectStore("images"),
         })

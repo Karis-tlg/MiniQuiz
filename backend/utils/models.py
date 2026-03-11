@@ -1,5 +1,6 @@
 from __future__ import annotations
-from pydantic import BaseModel, EmailStr, Field, HttpUrl
+import random
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, model_validator
 from typing import Dict, List, Literal, Callable, Type, Any
 from datetime import datetime
 from bson import ObjectId
@@ -60,7 +61,7 @@ class User(BaseModel):
     username: str
     email: EmailStr
     avatar: HttpUrl
-    password: str
+    password: str | None
     disabled: bool
     role: Literal["member", "admin"]
     createAt: datetime
@@ -87,6 +88,30 @@ class QuizData(BaseModel):
 
 class Quiz(QuizData):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
+    quiz_id: PydanticObjectId = Field(default_factory=PydanticObjectId)
+    images: dict[str, str]
+    version: int
     author: PydanticObjectId
     createAt: datetime
     updateAt: datetime
+
+class QuizQuestionLock(BaseModel):
+    id: str
+    type: str
+    question: str
+    options: List[QuizOption]
+
+class QuizLock(BaseModel):
+    title: str
+    randomize: QuizRandomize
+    questions: List[QuizQuestionLock]
+    images: dict[str, str]
+
+    @model_validator(mode="after")
+    def apply_randomize(self) -> QuizLock:
+        if self.randomize.questions:
+            random.shuffle(self.questions)
+        if self.randomize.options:
+            for question in self.questions:
+                random.shuffle(question.options)
+        return self

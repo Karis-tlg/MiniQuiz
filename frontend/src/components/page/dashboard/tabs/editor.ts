@@ -7,7 +7,7 @@ import { repeat } from 'lit/directives/repeat.js';
 @customElement('element-tab-editor')
 export class ElementTabEditor extends LitElement {
     @state() currentPage: number = 1
-    private quizs: { quizzes: { _id: string, title: string, updateAt: Date, question_count: number }[], max_page: number } = { quizzes: [], max_page: 1 }
+    private quizs: { quizzes: { quiz_id: string, title: string, updateAt: Date, question_count: number }[], max_page: number } = { quizzes: [], max_page: 1 }
 
     protected createRenderRoot(): HTMLElement | DocumentFragment {
         return this
@@ -39,7 +39,7 @@ export class ElementTabEditor extends LitElement {
             </div>
 
             <div class="grid grid-cols-1 gap-4">
-                ${this.quizs.quizzes.length !== 0 ? repeat(this.quizs.quizzes, quiz => quiz._id, quiz => html`
+                ${this.quizs.quizzes.length !== 0 ? repeat(this.quizs.quizzes, quiz => quiz.quiz_id, quiz => html`
                     <div class="flex flex-nowrap gap-4 rounded p-4 bg-gray-800/10 border border-gray-800/75 shadow">
                         <div class="bg-indigo-500/10 w-16 h-16 rounded-lg flex items-center justify-center">
                             <element-icon icon="image" size="8"></element-icon>
@@ -51,7 +51,7 @@ export class ElementTabEditor extends LitElement {
                                 <span>${quiz.question_count} câu hỏi</span>
                             </p>
                         </div>
-                        <button class="cursor-pointer ml-auto w-16 h-16 text-gray-400 hover:text-indigo-500 transition-colors" @click=${() => window.location.href = `/editor?quiz=${quiz._id}`}>
+                        <button class="cursor-pointer ml-auto w-16 h-16 text-gray-400 hover:text-indigo-500 transition-colors" @click=${() => window.location.href = `/editor?quiz=${quiz.quiz_id}`}>
                             <element-icon icon="pen-square" size="8"></element-icon>
                         </button>
                     </div>

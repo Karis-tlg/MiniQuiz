@@ -4,10 +4,11 @@ import { createRef, ref, type Ref } from "lit/directives/ref.js"
 import "../components/icon"
 import "../components/navbar"
 import "../components/notify"
-import { ElementSidebar } from"../components/form/editor/sidebar"
-import { ElementEditorMultiChoice } from "../components/form/editor/questions/multi_choice/editor"
+import { ElementSidebar } from"../components/page/editor/sidebar"
+import { ElementEditorMultiChoice } from "../components/page/editor/questions/multi_choice"
 import { getEditorData, updateQuiz } from "../apis/quiz"
 import { hasUserLogged } from "../apis/user"
+import { ImagesManager } from "../utils/images-manager"
 
 @customElement("page-editor")
 export class PageEditor extends LitElement {
@@ -51,8 +52,8 @@ export class PageEditor extends LitElement {
     }
 
     async firstUpdated() {
-        const local_data = sessionStorage.getItem("quiz")
         const load_quiz_id = new URLSearchParams(window.location.search).get("quiz")
+        const local_data = sessionStorage.getItem("quiz_" + load_quiz_id)
         if (load_quiz_id) {
             const data = local_data ? JSON.parse(local_data) : await getEditorData(load_quiz_id)
             await this.load_json(data)
@@ -100,14 +101,19 @@ export class PageEditor extends LitElement {
     }
     
     async save() {
+        this.loadingRef.value?.classList.replace("hidden", "flex")
         const data = await this.export_json()
-        await this.save_local(data)
+        sessionStorage.clear()
         const result = await updateQuiz(new URLSearchParams(window.location.search).get("quiz")!, data)
         window.dispatchEvent(new CustomEvent("page-notify", { detail: { message: result.message, duration: 5, type: "success" } }))
+        this.loadingRef.value?.classList.replace("flex", "hidden")
     }
 
     async save_local(data?: any) {
-        sessionStorage.setItem("quiz", JSON.stringify(data ?? await this.export_json()))
+        const quiz_id = new URLSearchParams(window.location.search).get("quiz")
+        const save_data = (data ?? await this.export_json())
+        save_data["images"] = ImagesManager.images_data
+        sessionStorage.setItem("quiz_"+quiz_id, JSON.stringify(save_data))
     }
 
     clear_quiz() {
@@ -130,6 +136,8 @@ export class PageEditor extends LitElement {
         this.sidebarRef.value?.set_time(0)
         this.sidebarRef.value?.set_random_questions(data.randomize?.questions ?? true)
         this.sidebarRef.value?.set_random_options(data.randomize?.options ?? true)
+
+        ImagesManager.images_data = data.images
 
         data.questions.forEach((question: any) => {
             const new_question = new ElementEditorMultiChoice()

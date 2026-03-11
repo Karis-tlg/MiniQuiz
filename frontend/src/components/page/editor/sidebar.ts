@@ -6,7 +6,6 @@ import { createRef, ref, type Ref } from "lit/directives/ref.js"
 export class ElementSidebar extends LitElement {
     @state() private close = !window.matchMedia('(min-width: 768px)').matches
     sidebarRef: Ref<HTMLElement> = createRef()
-    inputRef: Ref<HTMLInputElement> = createRef()
     titleRef: Ref<HTMLInputElement> = createRef()
     timeRef: Ref<HTMLInputElement> = createRef()
     randomQuestionsRef: Ref<HTMLInputElement> = createRef()
@@ -56,22 +55,6 @@ export class ElementSidebar extends LitElement {
         this.randomOptionsRef.value!.checked = value
     }
 
-    async onFileChange(event: Event) {
-        const file = event instanceof DragEvent ? event.dataTransfer?.files?.[0] : (event.target as HTMLInputElement).files?.[0]
-        if (file && file.type === "application/json") {
-            const reader = new FileReader()
-            reader.onload = () => {
-                const json = JSON.parse(reader.result as string)
-                window.dispatchEvent(new CustomEvent("load_json_quiz", { detail: json }))
-            }
-            reader.onerror = (e) => {
-                window.dispatchEvent(new CustomEvent("page-notify", { detail: { message: "Lỗi không xác định", type: "error" } }))
-                console.error(e)
-            }
-            reader.readAsText(file)
-        }
-    }
-
     protected render() {
         return html`
             <aside ${ref(this.sidebarRef)} class="${this.close ? 'hidden' : ''} lg:block w-full md:w-80 fixed top-14 left-0 bottom-0 z-100 h-full bg-default-background/70 backdrop-blur-md border-r border-slate-700 p-4">
@@ -106,20 +89,6 @@ export class ElementSidebar extends LitElement {
                             <div class="w-9 h-5 bg-default-card border border-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                         </div>
                     </label>
-
-                    <div
-                        @dragover="${(e: DragEvent) => { e.preventDefault(); (e.currentTarget as HTMLElement).classList.replace('border-slate-800', 'border-indigo-500') }}"
-                        @dragleave="${(e: DragEvent) => { e.preventDefault(); (e.currentTarget as HTMLElement).classList.replace('border-indigo-500', 'border-slate-800') }}"
-                        @drop="${(e: DragEvent) => { e.preventDefault(); (e.currentTarget as HTMLElement).classList.replace('border-indigo-500', 'border-slate-800'); this.onFileChange(e) }}"
-                        class="relative flex gap-x-3 items-center p-3 bg-default-card border-2 border-slate-800 border-dashed rounded-lg hover:border-indigo-500 transition cursor-pointer"
-                    >
-                        <element-icon icon="cloud-upload" size="13" class="text-gray-400"></element-icon>
-                        <p>
-                            <span class="text-sm text-indigo-400 mt-2">Tải lên</span>
-                            <span class="text-sm text-gray-400 mt-2">hoặc kéo thả file quiz vào đây</span>
-                        </p>
-                        <input ${ref(this.inputRef)} @change="${this.onFileChange}" type="file" accept=".json" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer">
-                    </div>
                 </nav>
             </aside>
         `

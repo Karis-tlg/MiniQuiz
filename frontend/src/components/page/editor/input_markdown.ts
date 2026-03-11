@@ -48,10 +48,14 @@ export class ElementEditorInputMarkdown extends LitElement {
                 const src = imgElement.getAttribute("data-image")!
                 const image = await ImagesManager.getImage(src)
                 if (image) {
-                    const objectURL = URL.createObjectURL(image.file)
-                    imgElement.setAttribute("src", objectURL)
+                    let srcUrl: string
+                    if (image instanceof Object) {
+                        srcUrl = URL.createObjectURL(image.file)
+                        imgElement.onload = () => URL.revokeObjectURL(srcUrl)
+                    } else srcUrl = image
+
+                    imgElement.setAttribute("src", srcUrl)
                     imgElement.removeAttribute("data-image")
-                    imgElement.onload = () => URL.revokeObjectURL(objectURL)
                 }
             })
             this.previewRef.value!.classList.remove("animate-pulse")

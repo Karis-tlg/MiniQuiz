@@ -22,6 +22,7 @@ export default defineConfig({
                 auth: 'auth.html',
                 index: 'index.html',
                 dashboard: 'dashboard.html',
+                quiz: 'quiz.html',
                 editor: 'editor.html',
                 legal: 'legal.html'
             }
