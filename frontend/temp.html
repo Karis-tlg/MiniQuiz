@@ -177,6 +177,59 @@
   }
   .sample-btn:hover { color: var(--accent); }
 
+  .toggle-group {
+    margin-top: 24px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    gap: 16px;
+  }
+  .toggle-row + .toggle-row { border-top: 1px solid var(--border); }
+
+  .toggle-label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .toggle-desc { font-size: 12px; color: var(--muted); }
+
+  .toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-thumb {
+    position: absolute;
+    inset: 0;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 99px;
+    transition: all .2s;
+  }
+  .toggle-thumb::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    background: var(--muted);
+    border-radius: 50%;
+    top: 50%; left: 3px;
+    transform: translateY(-50%);
+    transition: all .2s;
+  }
+  .toggle-switch input:checked + .toggle-thumb { background: var(--accent); border-color: var(--accent); }
+  .toggle-switch input:checked + .toggle-thumb::after { left: calc(100% - 19px); background: #fff; }
+
   /* ─── QUIZ SCREEN ─── */
   .quiz-header {
     display: flex;
@@ -231,7 +284,6 @@
     font-weight: 600;
     line-height: 1.5;
     color: var(--text);
-    white-space: pre-wrap;
   }
 
   .options-list {
@@ -370,12 +422,52 @@
   }
 
   /* ─── REVIEW ─── */
+  .review-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
   .review-title {
     font-size: 13px;
     font-family: 'JetBrains Mono', monospace;
     color: var(--muted);
     letter-spacing: 2px;
     text-transform: uppercase;
+    margin-bottom: 0;
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: 6px;
+  }
+
+  .filter-tab {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: all .2s;
+  }
+  .filter-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .review-empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 32px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
     margin-bottom: 16px;
   }
 
@@ -476,6 +568,29 @@
       ✦ Thử với dữ liệu mẫu
     </button>
 
+    <div class="toggle-group">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Xáo trộn câu hỏi</div>
+          <div class="toggle-desc">Random thứ tự câu hỏi mỗi lần làm</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="shuffle-q" checked>
+          <span class="toggle-thumb"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Xáo trộn đáp án</div>
+          <div class="toggle-desc">Random thứ tự các lựa chọn trong mỗi câu</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="shuffle-a" checked>
+          <span class="toggle-thumb"></span>
+        </label>
+      </div>
+    </div>
+
     <br>
     <button class="btn btn-primary" onclick="startQuiz()">
       Bắt đầu Quiz →
@@ -533,7 +648,15 @@
     </div>
 
     <div id="review-section" style="display:none">
-      <div class="review-title">Chi tiết từng câu</div>
+      <div class="review-header">
+        <div class="review-title">Chi tiết từng câu</div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all" onclick="setFilter('all')">Tất cả</button>
+          <button class="filter-tab" data-filter="correct" onclick="setFilter('correct')">✓ Đúng</button>
+          <button class="filter-tab" data-filter="wrong" onclick="setFilter('wrong')">✗ Sai</button>
+        </div>
+      </div>
+      <div id="review-empty" style="display:none" class="review-empty">Không có câu nào ở mục này.</div>
       <div id="review-list"></div>
     </div>
   </div>
@@ -544,7 +667,17 @@
   const SAMPLE = [{"q":"Sự truyền tín hiệu từ tế bào này sang tế bào khác thông qua phân tử tín hiệu để tạo ra các đáp ứng nhất định được gọi là","o":["tiếp nhận thông tin giữa các tế bào.","đáp ứng thông tin giữa các tế bào.","thông tin giữa các tế bào.","phân tử tín hiệu của giữa các tế bào."],"a":2},{"q":"Quá trình truyền tin giữa các tế bào không có giai đoạn","o":["tiếp nhận tín hiệu.","truyền tín hiệu.","đáp ứng tín hiệu.","xử lí tín hiệu."],"a":3},{"q":"Trong kiểu truyền thông tin giữa các tế bào, vai trò của tế bào tiết trong kiểu truyền tin cục bộ là","o":["tiết ra các phân tử tín hiệu.","tiếp nhận các phân tử tín hiệu.","tiết ra các kháng nguyên.","tiết ra các hormone."],"a":0},{"q":"Trong kiểu truyền thông tin giữa các tế bào, vai trò của tế bào đích trong kiểu truyền tin cục bộ là","o":["tiết ra các phân tử tín hiệu.","tiếp nhận các phân tử tín hiệu.","tiếp nhận các kháng nguyên.","tiếp nhận các hormone."],"a":1},{"q":"Các tế bào có khoảng cách xa chủ yếu truyền tin theo kiểu","o":["truyền tin nhờ các mối nối giữa các tế bào.","truyền tin theo kiểu tiếp xúc.","truyền tin cục bộ.","truyền tin qua khoảng cách xa."],"a":3},{"q":"Chu kì tế bào là","o":["hoạt động sống có tính chất chu kì, diễn ra từ lần phân bào này đến lần phân bào tiếp theo, kết quả từ một tế bào mẹ ban đầu hình","hoạt động sống có tính chất chu kì, diễn ra từ lần phân bào này đến lần phân bào tiếp theo, chỉ diễn ra ở sinh vật đa bào.","hoạt động sống có tính chất chu kì, thời gian của chu kì tế bào là thời gian của các giai đoạn trong quá trình phân bào.","hoạt động sống có tính chất chu kì, diễn ra từ lần phân bào này đến lần phân bào tiếp theo, đều giống nhau ở mọi tế bào trong một cơ thể"],"a":0},{"q":"Chu kì tế bào được chia thành các giai đoạn","o":["Kì trung gian và phân chia tế bào.","Kì trung gian và phân chia nhân.","Phân chia nhân và phân chia tế bào chất.","Pha G1, S và G2."],"a":0},{"q":"Ung thư là","o":["một nhóm bệnh liên quan đến sự giảm sinh sản bất thường của tế bào nhưng không có khả năng di căn và xâm lấn sang các bộ phận khác của cơ thể.","một nhóm bệnh liên quan đến sự tăng sinh bất thường của tế bào nhưng không có khả năng di căn và xâm lấn sang các bộ phận khác của cơ thể.","một nhóm bệnh liên quan đến sự giảm sinh sản bất thường của tế bào với khả năng di căn và xâm lấn sang các bộ phận khác của cơ thể.","một nhóm bệnh liên quan đến sự tăng sinh bất thường của tế bào với khả năng di căn và xâm lấn sang các bộ phận khác của cơ thể."],"a":3},{"q":"Nói về chu kì tế bào, phát biểu nào sau đây không đúng?","o":["Chu kì tế bào là khoảng thời gian giữa hai lần phân bào.","Chu kì tế bào gồm kỳ trung gian và quá trình phân bào.","Trong chu kì tế bào có sự biến đổi hình thái và số lượng NST.","Chu kì tế bào của mọi tế bào trong một cơ thể đều giống nhau"],"a":3},{"q":"Trong một chu kì tế bào, thời gian dài nhất là","o":["kì trung gian.","kì đầu.","kì giữa.","kì cuối."],"a":0},{"q":"Thời gian của một chu kì tế bào được xác định bằng","o":["Thời gian giữa hai lần phân bào liên tiếp.","Thời gian của quá trình nguyên phân.","Thời gian của kì trung gian.","Thời gian từ khi tế bào được sinh ra đến khi tế bào chết đi."],"a":0},{"q":"Trình tự các kì diễn ra trong pha phân chia tế bào (pha M) của chu kì tế bào là","o":["kì sau → kì đầu → kì giữa → kì cuối.","kì giữa →  kì đầu→ kì sau → kì cuối.","kì đầu → kì giữa → kì sau → kì cuối.","kì đầu → kì sau → kì giữa → kì cuối."],"a":2},{"q":"Hoạt động xảy ra trong pha G1 của kì trung gian là","o":["Tổng hợp các chất cần thiết cho sự sinh trưởng.","Trung thể tự nhân đôi.","NST tự nhân đôi.","DNA tự nhân đôi."],"a":0},{"q":"Hoạt động xảy ra trong pha S của kì trung gian là","o":["Nhân đôi DNA và NST.","NST tự nhân đôi.","DNA tự nhân đôi.","Tổng hợp các chất cần cho quá trình phân bào."],"a":0},{"q":"Hoạt động xảy ra trong pha G2 của kì trung gian là","o":["Tổng hợp các chất cần cho quá trình phân bào.","Tổng hợp các chất cần thiết cho sự sinh trưởng.","Tổng hợp tế bào chất và bào quan.","Phân chia tế bào."],"a":0},{"q":"Pha M gồm 2 quá trình là","o":["phân chia nhân và phân chia tế bào chất.","nhân đôi DNA và nhân đôi nhiễm sắc thể.","sinh trưởng tế bào và sinh sản tế bào.","phân chia nhân và phân chia bào quan."],"a":0},{"q":"Trình tự các kì diễn ra trong pha phân chia tế bào (pha M) của chu kì tế bào là","o":["kì sau → kì đầu → kì giữa → kì cuối.","kì giữa →  kì đầu→ kì sau → kì cuối.","kì đầu → kì giữa → kì sau → kì cuối.","kì đầu → kì sau → kì giữa → kì cuối."],"a":2},{"q":"Nguyên phân bao gồm 2 giai đoạn chính là","o":["kì trung gian và quá trình phân bào.","phân chia nhân và phân chia tế bào chất.","kì đầu và kì cuối.","pha G1 và pha G2."],"a":1},{"q":"Bệnh ung thư là 1 ví dụ về","o":["sự điều khiển chặt chẽ chu kì tế bào của cơ thể.","hiện tượng TB thoát khỏi cơ chế điều hòa phân bào của cơ thể.","chu kì tế bào diễn ra ổn định.","sự phân bào được điều khiển bằng 1 hệ thống điều hòa rất tinh vi."],"a":1},{"q":"Trong những kì nào của nguyên phân, NST ở trạng thái kép?","o":["Kì trung gian, kì đầu và kì cuối.","Kì đầu, kì giữa, kì cuối.","Kì trung gian, kì đầu và kì giữa.","Kì đầu, kì giữa, kì sau và kì cuối."],"a":2},{"q":"Loại tế bào nào xảy ra quá trình nguyên phân?","o":["Tế bào sinh dưỡng và tế bào sinh dục sơ khai.","Tế bào sinh dưỡng.","Tế bào sinh giao tử.","Tế bào sinh dục sơ khai."],"a":0},{"q":"Quá trình giảm phân xảy ra ở loại tế bào nào sau đây?","o":["Tế bào sinh dưỡng.","Tế bào sinh dục sơ khai.","Tế bào sinh dục chín.","Tế bào giao tử."],"a":2},{"q":"Thứ tự nào sau đây được sắp xếp đúng với trình tự phân chia nhân trong nguyên phân?","o":["Kì đầu, kì sau, kì cuối, kì giữa.","Kì sau, kì giữa, kì đầu, kì cuối.","Kì đầu, kì giữa, kì sau, kì cuối.","Kì giữa, kì sau, kì đầu, kì cuối."],"a":2},{"q":"Trong nguyên phân, các NST kép tập trung thành một hàng trên mặt phẳng xích đạo của thoi phân bào diễn ra ở","o":["kì đầu.","kì giữa.","kì sau.","kì cuối."],"a":1},{"q":"Qua quá trình nguyễn phân, từ 1 tế bào mẹ có bộ NST 2n tạo ra bao nhiêu tế bào con, mỗi tế bào con có bộ NST như thế nào?","o":["Tạo ra 1 tế bào con, mỗi tế bào con có bộ NST n.","Tạo ra 2 tế bào con, mỗi tế bào con có bộ NST 2n.","Tạo ra 1 tế bào con, mỗi tế bào con có bộ NST 2n.","Tạo ra 2 tế bào con, mỗi tế bào con có bộ NST n."],"a":1},{"q":"Trong nguyên phân, tế bào động vật phân chia tế bào chất bằng cách","o":["tạo vách ngăn ở mặt phẳng xích đạo.","kéo dài màng tế bào.","màng tế bào co thắt lại ở giữa tế bào.","tạo vách ngăn và kéo dài thành tế bào"],"a":2},{"q":"Trong nguyên phân, tế bào thực vật phân chia tế bào chất bằng cách","o":["tạo vách ngăn ở mặt phẳng xích đạo.","kéo dài màng tế bào.","màng tế bào co thắt lại ở giữa tế bào.","tạo vách ngăn và kéo dài thành tế bào"],"a":0},{"q":"Nhiễm sắc thể co xoắn cực đại có hình thái đặc trưng và dễ quan sát nhất vào :","o":["Kỳ giữa.","Kỳ cuối.","Kỳ sau.","Kỳ đầu."],"a":0},{"q":"Kết quả của giảm phân là từ 1 tế bào mẹ (2n) tạo ra","o":["2 tế bào con có bộ NST n.","2 tế bào con có bộ NST 2n.","4 tế bào con có bộ NST n.","4 tế bào con có bộ NST 2n."],"a":2},{"q":"Trong quá trình nguyên phân, nhiễm sắc tử tách nhau ở tâm động và di chuyển về 2 cực của tế bào ở","o":["kì đầu.","kì giữa.","ki sau.","kì cuối."],"a":2},{"q":"Sự tiếp hợp của các cặp NST kép tương đồng xảy ra trong kì nào của giảm phân?","o":["Kì đầu của giảm phân I.","Kì giữa của giảm phân II.","Kì đầu của giảm phân II.","Kì giữa của giảm phân I."],"a":0},{"q":"Cho các dữ kiện sau: 1. Các NST kép dần co xoán 2. Màng nhân và nhân con dần tiêu biến 3. Màng nhân và nhân con xuất hiện 4. Thoi phân bào dần xuất hiện 6. Các nhiễm sắc tử tách nhau ra và di chuyển trên thoi phân bảo về 2 cực của tế bào. Các sự kiện diễn ra trong kì đầu của nguyên phân là","o":["(1), (2), (6).","(1), (2), (4).","(1), (2), (3).","(2), (4), (5)."],"a":1},{"q":"Trong quá trình nguyên phân, NST tồn tại ở trạng thái kép ở những kì nào sau đây?","o":["kì đầu và kì giữa.","kì giữa và kì sau.","kì sau và kì cuối.","kì đầu và kì cuối."],"a":0},{"q":"Mỗi tế bào sinh trứng sau giảm phân tạo nên","o":["4 trứng.","2 trứng và 2 thể định hướng.","1 trứng và 3 thể định hướng.","3 trứng và 1 thể định hướng."],"a":2},{"q":"Cho các dữ kiện sau: 1. Các NST kép dần co xoán 2. Màng nhân và nhân con dần tiêu biến 3. Màng nhân và nhân con xuất hiện 4. Thoi phân bào dần xuất hiện 6. Các nhiễm sắc tử tách nhau ra và di chuyển trên thoi phân bảo về 2 cực của tế bào. Các sự kiện diễn ra trong kì đầu của nguyên phân là","o":["(1), (2), (6).","(1), (2), (4).","(1), (2), (3).","(2), (4), (5)."],"a":1},{"q":"Ý nghĩa của quá trình nguyên phân","o":["Thực hiện chức năng sinh sản, sinh trưởng, tái sinh các mô và các bộ phận bị tổn thương.","Truyền đạt, duy trì ổn định bộ NST 2n đặc trưng của loài sinh sản hữu tính qua các thế hệ.","Tăng số lượng tế bào trong thời gian ngắn.","Giúp cho quá trình sinh trưởng và phát triển của cơ thể."],"a":0},{"q":"Ý nghĩa của quá trình giảm phân là","o":["Hình thành giao tử có bộ NST n, tạo cơ sở cho quá trình thụ tinh.","Tạo nên nhiều tế bào đơn bội cho cơ thể.","Giảm bộ NST trong tế bào.","Giúp cho cơ thể tạo thế hệ mới."],"a":0},{"q":"Sự khác nhau trong quá trình phân chia tế bào chất ở tế bào động vật và thực vật là do","o":["tế bào động vật có kích thước nhỏ.","tế bào động vật có nhiều lysosome.","tế bào thực vật có thành cellulose.","tế bào thực vật có không bào lớn."],"a":2},{"q":"Cho các yếu tố sau: (1) Sóng điện thoại di động. (2) Chất dioxin. (3) Chế độ dinh dưỡng thiếu kẽm. (4) Bất thường về cấu trúc nhiễm sắc thể. Số yếu tố ảnh hưởng đến quá trình giảm phân tạo giao tử ở nam giới là","o":["1.","2.","3.","4."],"a":3},{"q":"Điểm giống nhau gữa quá trình nguyên phân và quá trình giảm phân là gì?","o":["Gồm 2 lần phân bào.","Xảy ra ở tế bào hợp tử.","Xảy ra ở tế bào sinh dục.","Nhiễm sắc thể nhân đôi một lần."],"a":3},{"q":"Sau giảm phân số lượng NST ở tế bào con giảm đi một nửa vì","o":["Ở lần phân bào II không có sự tự nhân đôi của NST.","Ở lần phân bào II có sự phân li của cặp NST kép tương đồng.","Có 2 lần phân bào liên tiếp.","Ở kì cuối phân bào I có 2 tế bào con mang n NST kép."],"a":0},{"q":"Sự kiện quan trọng nhất của giảm phân để phân biệt với nguyên phân về mặt di truyền học là","o":["Phân li NST.","Trao đổi chéo NST.","Giãn xoắn và co xoắn của NST.","Kiểu tập trung của NST ở kì giữa của giảm phân I."],"a":3},{"q":"Hiện tượng các nhiễm sắc thể kép co xoắn trong nguyên phân có ý nghĩa nào sau đây?","o":["Tạo thuận lợi cho sự phân li của nhiễm sắc thể.","Tạo thuận lợi cho sự nhân đôi của nhiễm sắc thể.","Tạo thuận lợi cho sự tiếp hợp của nhiễm sắc thể.","Tạo thuận lợi cho sự trao đổi chéo của nhiễm sắc thể."],"a":0},{"q":"Hiện tượng các nhiễm sắc thể dãn xoắn trong nguyên phân có ý nghĩa nào sau đây?","o":["Tạo thuận lợi cho sự phân li và tổ hợp nhiễm sắc thể.","Tạo thuận lợi cho sự nhân đôi DNA và nhiễm sắc thể.","Tạo thuận lợi cho sự tiếp hợp của nhiễm sắc thể.","Tạo thuận lợi cho sự trao đổi chéo của nhiễm sắc thể."],"a":1},{"q":"Ở vi khuẩn và tảo, việc tổng hợp tinh bột và glycogen cần hợp chất mở đầu là","o":["Glucose.","ATP.","ADP-Glucose.","ATP-Glucose."],"a":2},{"q":"Phương trình tổng hợp carbohydrate ở vi sinh vật nào sau đây là đúng?","o":["[Glucose]_{n+1} + [ADP-glucose] → [Glucose]_n + ADP.","[Glucose]_n + ADP → [Glucose]_{n+1} + [ADP-glucose].","[Glucose]_n + [ADP-glucose] → [Glucose]_{n+1} + ADP.","[Glucose]_{n+1} + ADP → [Glucose]_n + [ADP-glucose]."],"a":2},{"q":"Trong quá trình tổng hợp carbohydrate, các phân tử polysaccharide được tạo ra nhờ sự liên kết các phân tử glucose bằng liên kết","o":["glycosidic.","peptide.","ion.","liên kết hidrogen."],"a":0},{"q":"Phát biểu nào sau đây là sai khi nói về sự tổng hợp protein của vi sinh vật?","o":["Vi sinh vật có khả năng tự tổng hợp các loại amino acid.","Vi sinh vật có khả năng tổng hợp protein.","Protein tổng hợp được khi liên kết các amino acid với nhau bằng liên kết glycosid.","Phương trình tổng hợp protein là: (Amino acid)_n → Protein."],"a":2},{"q":"Vi sinh vật tổng hợp lipid bằng cách","o":["liên kết glycerol và glutamic acid.","liên kết lysine và acid béo.","liên kết glycerol và acid béo.","liên kết lysine và glutamic acid."],"a":2},{"q":"Phát biểu nào sau đây là Đúng khi nói về quá trình lên men của vi sinh vật.","o":["Quá trình lên men thực chất là quá trình phân giải protein của vi sinh vật.","Trong quá trình lên men lactic có sự tham gia của nấm men rượu.","Quá trình lên men của vi khuẩn lactic đồng hình sinh ra nhiều chất hơn so với quá trình lên men của vi khuẩn lactic dị hình.","Sản phẩm chính yếu của quá trình lên men rượu là ethanol."],"a":3},{"q":"Đường đơn được tạo ra sau quá trình phân giải các hợp chất carbohydrate ở vi sinh vật được chúng hấp thụ và phân giải theo con đường (1) hiếu khí. (2) kị khí. (3) lên men. Trong các con đường trên, con đường đúng là","o":["lên men.","hiếu khí và kị khí.","hiếu khí và lên men.","hiếu khí, kị khí hoặc lên men."],"a":3},{"q":"Sản phẩm nào sau đây luôn xuất hiện sau quá trình lên men lactic?","o":["CO_2.","Ethanol.","Lactic acid.","Acetic acid."],"a":2},{"q":"Công nghệ vi sinh vật là lĩnh vực","o":["nghiên cứu, ứng dụng vi sinh vật trong sản xuất, chế biến sản phẩm phục vụ đời sống con người.","nghiên cứu, ứng dụng vi sinh vật trong sản xuất, chế biến các sản phẩm xử lí ô nhiễm môi trường.","nghiên cứu, ứng dụng vi sinh vật trong sản xuất, chế biến các sản phẩm thuốc chữa bệnh động vật.","nghiên cứu, ứng dụng vi sinh vật trong sản xuất, chế biến các loại thực phẩm giàu giá trị dinh dưỡng."],"a":0},{"q":"Lĩnh vực nào sau đây ít có sự liên quan đến công nghệ vi sinh vật?","o":["Y học.","Môi trường.","Công nghệ thực phẩm.","Công nghệ ô tô."],"a":3},{"q":"Hoạt động nào sau đây là ứng dụng của quá trình phân giải ở vi sinh vật?","o":["Sản xuất các chất xúc tác sinh học.","Sản xuất sinh khối.","Sản xuất Bột giặt sinh học.","Sản xuất amino acid."],"a":2},{"q":"Ví dụ nào sau đây nói về ứng dụng đặc điểm quá trình phân giải các chất của vi sinh vật?","o":["Sản xuất protein đơn bào.","Sản xuất acid amin.","Nước mắm.","Sản xuất các chất xúc tác sinh học."],"a":2},{"q":"Xử lý nước thải là ứng dụng của công nghệ vi sinh vật trong","o":["y học.","nông nghiệp.","bảo vệ môi trường.","sinh hoạt."],"a":2},{"q":"Xử lý mùi hôi trong chăn nuôi là ứng dụng của chế phẩm vi sinh vật trong","o":["sinh hoạt.","nông nghiệp.","công nghiệp.","môi trường."],"a":1},{"q":"Thành tựu nào sau đây là ứng dụng của công nghệ vi sinh vật trong nông nghiệp?","o":["Kháng sinh.","Dưa muối.","Nước tương.","Phân bón."],"a":3},{"q":"Bón phân vi sinh vật lâu thường xuyên thì","o":["không gây hại cho đất.","đất sẽ bị thoái hóa.","đất sẽ bị bạc màu.","khiến kết cấu đất kém bền."],"a":0},{"q":"Tên nào dưới đây không phải là phân bón vi sinh?","o":["Phân vi sinh cố định đạm.","Phân siêu lân organic.","Phân Superphosphate.","Phân vi sinh phân giải cellulose."],"a":2},{"q":"Dựa vào đặc điểm nào của vi sinh vật người ta sử dụng chúng để xử lí ô nhiễm môi trường?","o":["Vi sinh vật có khả năng phân giải các chất phức tạp.","Khả năng sinh trưởng và sinh sản nhanh.","Khả năng phân bố và thích nghi cao.","Khả năng sống trong những môi trường cực đoan."],"a":0},{"q":"Sản xuất men vi sinh là ứng dụng của công nghệ vi sinh vật trong lĩnh vực nào?","o":["Trồng trọt.","Dược học.","Chăn nuôi.","Thủy sản."],"a":2},{"q":"Đâu là ứng dụng công nghệ vi sinh trong bảo vệ môi trường và xử lí chất thải trồng trọt?","o":["Ủ chua phụ phẩm trồng trọt.","Ủ men làm sữa chua.","Bón phân hóa học cho cây trồng.","Trồng xen canh cây họ đậu."],"a":0},{"q":"Ứng dụng nào sau đây là của công nghệ vi sinh vật?","o":["Nhân giống vô tính cừu Dolly.","Hồ (bể) nuôi cá cảnh thủy sinh.","Hoa lan chiết.","Sản xuất ra giống dưa không hạt"],"a":1},{"q":"Công nghệ vi sinh vật là gì?","o":["Là công nghệ sử dụng vi sinh vật và hoặc các dẫn xuất để tạo ra sản phẩm phục vụ cho đời sống con người.","Là lĩnh vực quan trọng của công nghệ tế bào.","Là công nghệ sử dụng vi sinh vật và các chất hóa học để tạo ra sản phẩm phục vụ cho đời sống con người.","Là công nghệ sử dụng virus và các chất hóa học để tạo ra sản phẩm phục vụ cho đời sống con người."],"a":0},{"q":"Sản phẩm tạo ra từ công nghệ vi sinh vật có đặc điểm như thế nào?","o":["An toàn, thân thiện với môi trường, giá thành cao, hiệu quả lâu dài.","Gây ô nhiễm môi trường, giá thành rẻ, hiệu quả tức thời.","Gây hại cho người sử dụng nên giá thành rẻ, hiệu quả lâu dài.","An toàn, thân thiện với môi trường, giá thành rẻ, hiệu quả lâu dài."],"a":3},{"q":"Cơ sở khoa học của việc ứng dụng công nghệ vi sinh vật là gì?","o":["Dựa trên đặc điểm các chất vi sinh vật như: kích thước lớn, sinh trưởng, phát triển nhanh,...","Dựa trên đặc điểm các chất vi sinh vật như: sinh trưởng, phát triển nhanh, chỉ sống được ở một môi trường duy nhất.","Dựa trên đặc điểm các chất vi sinh vật như: kích thước nhỏ, sinh trưởng, phát triển nhanh,...","Dựa trên đặc điểm các chế phẩm hóa học để sản xuất các loại phân bón."],"a":2},{"q":"Vi sinh vật có những đặc điểm gì mà được dùng để sản xuất các sản phẩm phục vụ đời sống con người?","o":["Kích thước lớn, dễ quan sát.","Thời gian sinh trưởng, phát triển chậm.","Chỉ sống được ở một môi trường.","Có hình thức dinh dưỡng đa dạng."],"a":3},{"q":"Cho hình ảnh dưới đây về thuốc trừ sâu sinh học\n![Description: Graphical user interface, text, applicationDescription automatically generated](media/image1.png){width=\"2.9895833333333335in\" height=\"1.6805555555555556in\"}\n\nNguồn ảnh: Sách giáo khoa Sinh học 10 -- Chân trời sáng tạo.\n\nCó bao nhiêu phát biểu sau đây đúng?\n\nI. Thuốc trừ sâu sinh học được sản xuất từ vi sinh vật.\n\nII. Thuốc trừ sâu sinh học là chế phẩm dùng để diệt trừ vi sinh vật.\n\nIII. Thuốc trừ sâu sinh học ảnh hưởng tốt đến môi trường hơn so với thuốc trừ sâu hóa học.\n\nIV. Thuốc trừ sâu sinh học là một ứng dụng của vi sinh vật trong y học.","o":["1.","2.","3.","4."],"a":1},{"q":"Cho các đặc điểm sau:\n\nI. Có kích thước hiển vi.\n\nII. Tốc độ trao đổi chất với môi trường nhanh.\n\nIII. Sinh trưởng và sinh sản nhanh.\n\nIV. Hình thức dinh dưỡng đa dạng.\n\nCó bao nhiêu đặc điểm trên là cơ sở khoa học của công nghệ vi sinh vật?","o":["1.","2.","3.","4."],"a":3}];
 
   let quiz = [], current = 0, answers = [], score = 0;
+  let reviewFilter = 'all';
   const LETTERS = ['A','B','C','D','E','F'];
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
 
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -558,12 +691,27 @@
   function startQuiz() {
     const raw = document.getElementById('json-input').value.trim();
     const err = document.getElementById('error-msg');
+    const doShuffleQ = document.getElementById('shuffle-q').checked;
+    const doShuffleA = document.getElementById('shuffle-a').checked;
     try {
-      const data = JSON.parse(raw);
+      let data = JSON.parse(raw);
       if (!Array.isArray(data) || data.length === 0) throw new Error();
       data.forEach(item => {
         if (!item.q || !Array.isArray(item.o) || item.o.length < 2 || typeof item.a !== 'number') throw new Error();
       });
+
+      // Shuffle questions
+      if (doShuffleQ) data = shuffle(data);
+
+      // Shuffle answers per question — remap correct answer index
+      if (doShuffleA) {
+        data = data.map(item => {
+          const correctText = item.o[item.a];
+          const newOptions = shuffle(item.o);
+          return { q: item.q, o: newOptions, a: newOptions.indexOf(correctText) };
+        });
+      }
+
       quiz = data;
       answers = new Array(quiz.length).fill(null);
       score = 0;
@@ -682,35 +830,44 @@
 
   function buildReview() {
     const list = document.getElementById('review-list');
+    const empty = document.getElementById('review-empty');
     list.innerHTML = '';
-    quiz.forEach((q, i) => {
+
+    const filtered = quiz.map((q, i) => ({ q, i, correct: answers[i] === q.a }))
+      .filter(item => {
+        if (reviewFilter === 'correct') return item.correct;
+        if (reviewFilter === 'wrong') return !item.correct;
+        return true;
+      });
+
+    if (filtered.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    filtered.forEach(({ q, i, correct: isCorrect }) => {
       const userAns = answers[i];
-      const isCorrect = userAns === q.a;
       const card = document.createElement('div');
       card.className = 'review-card ' + (isCorrect ? 'correct-card' : 'wrong-card');
 
       let answerHtml = '';
-      q.o.forEach((opt, j) => {
-        let cls = '';
-        let tag = '';
-        if (j === q.a) { cls = 'correct-ans'; tag = '✓ Đúng'; }
-        else if (j === userAns && !isCorrect) { cls = 'wrong-ans'; tag = '✗ Bạn chọn'; }
-        else { cls = 'neutral-ans'; }
-        if (cls !== 'neutral-ans') {
-          answerHtml += `<div class="review-answer ${cls}">
-            <span class="ans-tag">${LETTERS[j]}. ${tag}</span>
-            <span>${opt}</span>
-          </div>`;
-        }
-      });
-
-      // If user got it right, only show the correct answer
       if (isCorrect) {
         const j = q.a;
         answerHtml = `<div class="review-answer correct-ans">
           <span class="ans-tag">${LETTERS[j]}. ✓ Đúng</span>
           <span>${q.o[j]}</span>
         </div>`;
+      } else {
+        q.o.forEach((opt, j) => {
+          if (j === q.a) {
+            answerHtml += `<div class="review-answer correct-ans">
+              <span class="ans-tag">${LETTERS[j]}. ✓ Đúng</span><span>${opt}</span></div>`;
+          } else if (j === userAns) {
+            answerHtml += `<div class="review-answer wrong-ans">
+              <span class="ans-tag">${LETTERS[j]}. ✗ Bạn chọn</span><span>${opt}</span></div>`;
+          }
+        });
       }
 
       card.innerHTML = `
@@ -724,6 +881,14 @@
     });
   }
 
+  function setFilter(f) {
+    reviewFilter = f;
+    document.querySelectorAll('.filter-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.filter === f);
+    });
+    buildReview();
+  }
+
   let reviewVisible = false;
   function toggleReview() {
     reviewVisible = !reviewVisible;
@@ -733,6 +898,8 @@
 
   function resetQuiz() {
     reviewVisible = false;
+    reviewFilter = 'all';
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
     document.getElementById('review-section').style.display = 'none';
     document.getElementById('toggle-review-btn').textContent = 'Xem đáp án ▾';
     document.getElementById('q-score').textContent = '0';
