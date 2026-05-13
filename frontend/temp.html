@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz App</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0d0d14;
+    --surface: #16161f;
+    --surface2: #1e1e2e;
+    --border: #2a2a3d;
+    --accent: #7c6dfa;
+    --accent2: #fa6d8a;
+    --success: #4ade80;
+    --error: #f87171;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --radius: 16px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(124,109,250,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(250,109,138,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 680px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── SCREEN SETUP ─── */
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeUp .4s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── SETUP SCREEN ─── */
+  .logo {
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-size: clamp(32px, 6vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--text) 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+
+  .input-label {
+    display: block;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 200px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 16px 20px;
+    resize: vertical;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .error-msg {
+    color: var(--error);
+    font-size: 13px;
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    border-radius: 50px;
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all .2s;
+    letter-spacing: .3px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    margin-top: 24px;
+    box-shadow: 0 0 32px rgba(124,109,250,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(124,109,250,0.45); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .sample-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: color .2s;
+    padding: 0;
+  }
+  .sample-btn:hover { color: var(--accent); }
+
+  /* ─── QUIZ SCREEN ─── */
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .quiz-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .quiz-counter span { color: var(--accent); font-weight: 700; }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 99px;
+    margin-bottom: 36px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .question-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+
+  .question-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    opacity: .8;
+  }
+
+  .question-text {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .option-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all .2s;
+    user-select: none;
+  }
+
+  .option-item:hover:not(.locked) {
+    border-color: var(--accent);
+    background: rgba(124,109,250,0.06);
+  }
+
+  .option-item.selected {
+    border-color: var(--accent);
+    background: rgba(124,109,250,0.1);
+  }
+
+  .option-item.correct {
+    border-color: var(--success);
+    background: rgba(74,222,128,0.08);
+  }
+
+  .option-item.wrong {
+    border-color: var(--error);
+    background: rgba(248,113,113,0.08);
+  }
+
+  .option-letter {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: all .2s;
+  }
+
+  .option-item.selected .option-letter { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .option-item.correct .option-letter { background: var(--success); border-color: var(--success); color: #000; }
+  .option-item.wrong .option-letter { background: var(--error); border-color: var(--error); color: #fff; }
+
+  .option-text { font-size: 15px; line-height: 1.5; }
+
+  .option-icon {
+    margin-left: auto;
+    font-size: 18px;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .option-item.correct .option-icon,
+  .option-item.wrong .option-icon { opacity: 1; }
+
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* ─── RESULT SCREEN ─── */
+  .result-hero {
+    text-align: center;
+    padding: 40px 0 32px;
+  }
+
+  .score-ring {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 24px;
+    position: relative;
+  }
+
+  .score-ring svg { transform: rotate(-90deg); }
+
+  .score-ring-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-number {
+    font-size: 38px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .result-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .result-sub { color: var(--muted); font-size: 15px; }
+
+  .result-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 32px 0;
+    flex-wrap: wrap;
+  }
+
+  /* ─── REVIEW ─── */
+  .review-title {
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .review-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: border-color .2s;
+  }
+
+  .review-card.correct-card { border-color: rgba(74,222,128,0.3); }
+  .review-card.wrong-card { border-color: rgba(248,113,113,0.3); }
+
+  .review-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .review-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .review-badge.ok { background: rgba(74,222,128,0.15); }
+  .review-badge.no { background: rgba(248,113,113,0.15); }
+
+  .review-q {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .review-answers { display: flex; flex-direction: column; gap: 8px; }
+
+  .review-answer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    padding: 10px 14px;
+    border-radius: 10px;
+  }
+
+  .review-answer.correct-ans { background: rgba(74,222,128,0.08); color: var(--success); }
+  .review-answer.wrong-ans { background: rgba(248,113,113,0.08); color: var(--error); }
+  .review-answer.neutral-ans { color: var(--muted); }
+
+  .ans-tag {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    opacity: .7;
+    flex-shrink: 0;
+  }
+
+  /* ─── CONFETTI ─── */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+    z-index: 999;
+    pointer-events: none;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- SETUP SCREEN -->
+  <div class="screen active" id="screen-setup">
+    <div class="logo">// Quiz App</div>
+    <h1>Dán câu hỏi,<br>bắt đầu thôi.</h1>
+    <p class="subtitle">Nhập danh sách câu hỏi theo định dạng JSON để bắt đầu bài kiểm tra.</p>
+
+    <label class="input-label" for="json-input">Dữ liệu JSON</label>
+    <textarea id="json-input" placeholder='[{"q": "Thủ đô của Việt Nam?", "o": ["Hà Nội", "TP.HCM", "Đà Nẵng"], "a": 0}, ...]'></textarea>
+    <div class="error-msg" id="error-msg">⚠ JSON không hợp lệ. Kiểm tra lại định dạng.</div>
+
+    <button class="sample-btn" onclick="loadSample()">
+      ✦ Thử với dữ liệu mẫu
+    </button>
+
+    <br>
+    <button class="btn btn-primary" onclick="startQuiz()">
+      Bắt đầu Quiz →
+    </button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen" id="screen-quiz">
+    <div class="quiz-header">
+      <div class="quiz-counter">Câu <span id="q-current">1</span> / <span id="q-total">10</span></div>
+      <div class="quiz-counter">Đúng: <span id="q-score" style="color:var(--success)">0</span></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <div class="question-card">
+      <div class="question-num" id="q-num">CÂU 01</div>
+      <div class="question-text" id="q-text"></div>
+    </div>
+
+    <div class="options-list" id="options-list"></div>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" id="btn-prev" onclick="prevQuestion()">← Trước</button>
+      <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">Tiếp →</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="screen-result">
+    <div class="result-hero">
+      <div class="score-ring">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="58" fill="none" stroke="var(--surface2)" stroke-width="10"/>
+          <circle cx="70" cy="70" r="58" fill="none" stroke="url(#grad)" stroke-width="10"
+            stroke-linecap="round" id="score-circle" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:var(--accent)"/>
+              <stop offset="100%" style="stop-color:var(--accent2)"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="score-ring-text">
+          <div class="score-number" id="final-score">0/0</div>
+          <div class="score-label">ĐIỂM</div>
+        </div>
+      </div>
+      <div class="result-title" id="result-title">Hoàn thành!</div>
+      <div class="result-sub" id="result-sub"></div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn btn-outline" onclick="resetQuiz()">↩ Làm lại</button>
+      <button class="btn btn-primary" id="toggle-review-btn" onclick="toggleReview()">Xem đáp án ▾</button>
+    </div>
+
+    <div id="review-section" style="display:none">
+      <div class="review-title">Chi tiết từng câu</div>
+      <div id="review-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SAMPLE = [{"q":"Sự truyền tín hiệu từ tế bào này sang tế bào khác thông qua phân tử tín hiệu để tạo ra các đáp ứng nhất định được gọi là","o":["tiếp nhận thông tin giữa các tế bào.","đáp ứng thông tin giữa các tế bào.","thông tin giữa các tế bào.","phân tử tín hiệu của giữa các tế bào."],"a":2},{"q":"Quá trình truyền tin giữa các tế bào không có giai đoạn","o":["tiếp nhận tín hiệu.","truyền tín hiệu.","đáp ứng tín hiệu.","xử lí tín hiệu."],"a":3},{"q":"Trong kiểu truyền thông tin giữa các tế bào, vai trò của tế bào tiết trong kiểu truyền tin cục bộ là","o":["tiết ra các phân tử tín hiệu.","tiếp nhận các phân tử tín hiệu.","tiết ra các kháng nguyên.","tiết ra các hormone."],"a":0},{"q":"Trong kiểu truyền thông tin giữa các tế bào, vai trò của tế bào đích trong kiểu truyền tin cục bộ là","o":["tiết ra các phân tử tín hiệu.","tiếp nhận các phân tử tín hiệu.","tiếp nhận các kháng nguyên.","tiếp nhận các hormone."],"a":1},{"q":"Các tế bào có khoảng cách xa chủ yếu truyền tin theo kiểu","o":["truyền tin nhờ các mối nối giữa các tế bào.","truyền tin theo kiểu tiếp xúc.","truyền tin cục bộ.","truyền tin qua khoảng cách xa."],"a":3},{"q":"Chu kì tế bào là","o":["hoạt động sống có tính chất chu kì, diễn ra từ lần phân bào này đến lần phân bào tiếp theo, kết quả từ một tế bào mẹ ban đầu hình","hoạt động sống có tính chất chu kì, diễn ra từ lần phân bào này đến lần phân bào tiếp theo, chỉ diễn ra ở sinh vật đa bào.","hoạt động sống có tính chất chu kì, thời gian của chu kì tế bào là thời gian của các giai đoạn trong quá trình phân bào.","hoạt động sống có tính chất chu kì, diễn ra từ lần phân bào này đến lần phân bào tiếp theo, đều giống nhau ở mọi tế bào trong một cơ thể"],"a":0},{"q":"Chu kì tế bào được chia thành các giai đoạn","o":["Kì trung gian và phân chia tế bào.","Kì trung gian và phân chia nhân.","Phân chia nhân và phân chia tế bào chất.","Pha G1, S và G2."],"a":0},{"q":"Ung thư là","o":["một nhóm bệnh liên quan đến sự giảm sinh sản bất thường của tế bào nhưng không có khả năng di căn và xâm lấn sang các bộ phận khác của cơ thể.","một nhóm bệnh liên quan đến sự tăng sinh bất thường của tế bào nhưng không có khả năng di căn và xâm lấn sang các bộ phận khác của cơ thể.","một nhóm bệnh liên quan đến sự giảm sinh sản bất thường của tế bào với khả năng di căn và xâm lấn sang các bộ phận khác của cơ thể.","một nhóm bệnh liên quan đến sự tăng sinh bất thường của tế bào với khả năng di căn và xâm lấn sang các bộ phận khác của cơ thể."],"a":3},{"q":"Nói về chu kì tế bào, phát biểu nào sau đây không đúng?","o":["Chu kì tế bào là khoảng thời gian giữa hai lần phân bào.","Chu kì tế bào gồm kỳ trung gian và quá trình phân bào.","Trong chu kì tế bào có sự biến đổi hình thái và số lượng NST.","Chu kì tế bào của mọi tế bào trong một cơ thể đều giống nhau"],"a":3},{"q":"Trong một chu kì tế bào, thời gian dài nhất là","o":["kì trung gian.","kì đầu.","kì giữa.","kì cuối."],"a":0},{"q":"Thời gian của một chu kì tế bào được xác định bằng","o":["Thời gian giữa hai lần phân bào liên tiếp.","Thời gian của quá trình nguyên phân.","Thời gian của kì trung gian.","Thời gian từ khi tế bào được sinh ra đến khi tế bào chết đi."],"a":0},{"q":"Trình tự các kì diễn ra trong pha phân chia tế bào (pha M) của chu kì tế bào là","o":["kì sau → kì đầu → kì giữa → kì cuối.","kì giữa →  kì đầu→ kì sau → kì cuối.","kì đầu → kì giữa → kì sau → kì cuối.","kì đầu → kì sau → kì giữa → kì cuối."],"a":2},{"q":"Hoạt động xảy ra trong pha G1 của kì trung gian là","o":["Tổng hợp các chất cần thiết cho sự sinh trưởng.","Trung thể tự nhân đôi.","NST tự nhân đôi.","DNA tự nhân đôi."],"a":0},{"q":"Hoạt động xảy ra trong pha S của kì trung gian là","o":["Nhân đôi DNA và NST.","NST tự nhân đôi.","DNA tự nhân đôi.","Tổng hợp các chất cần cho quá trình phân bào."],"a":0},{"q":"Hoạt động xảy ra trong pha G2 của kì trung gian là","o":["Tổng hợp các chất cần cho quá trình phân bào.","Tổng hợp các chất cần thiết cho sự sinh trưởng.","Tổng hợp tế bào chất và bào quan.","Phân chia tế bào."],"a":0},{"q":"Pha M gồm 2 quá trình là","o":["phân chia nhân và phân chia tế bào chất.","nhân đôi DNA và nhân đôi nhiễm sắc thể.","sinh trưởng tế bào và sinh sản tế bào.","phân chia nhân và phân chia bào quan."],"a":0},{"q":"Trình tự các kì diễn ra trong pha phân chia tế bào (pha M) của chu kì tế bào là","o":["kì sau → kì đầu → kì giữa → kì cuối.","kì giữa →  kì đầu→ kì sau → kì cuối.","kì đầu → kì giữa → kì sau → kì cuối.","kì đầu → kì sau → kì giữa → kì cuối."],"a":2},{"q":"Nguyên phân bao gồm 2 giai đoạn chính là","o":["kì trung gian và quá trình phân bào.","phân chia nhân và phân chia tế bào chất.","kì đầu và kì cuối.","pha G1 và pha G2."],"a":1},{"q":"Bệnh ung thư là 1 ví dụ về","o":["sự điều khiển chặt chẽ chu kì tế bào của cơ thể.","hiện tượng TB thoát khỏi cơ chế điều hòa phân bào của cơ thể.","chu kì tế bào diễn ra ổn định.","sự phân bào được điều khiển bằng 1 hệ thống điều hòa rất tinh vi."],"a":1},{"q":"Trong những kì nào của nguyên phân, NST ở trạng thái kép?","o":["Kì trung gian, kì đầu và kì cuối.","Kì đầu, kì giữa, kì cuối.","Kì trung gian, kì đầu và kì giữa.","Kì đầu, kì giữa, kì sau và kì cuối."],"a":2},{"q":"Loại tế bào nào xảy ra quá trình nguyên phân?","o":["Tế bào sinh dưỡng và tế bào sinh dục sơ khai.","Tế bào sinh dưỡng.","Tế bào sinh giao tử.","Tế bào sinh dục sơ khai."],"a":0},{"q":"Quá trình giảm phân xảy ra ở loại tế bào nào sau đây?","o":["Tế bào sinh dưỡng.","Tế bào sinh dục sơ khai.","Tế bào sinh dục chín.","Tế bào giao tử."],"a":2},{"q":"Thứ tự nào sau đây được sắp xếp đúng với trình tự phân chia nhân trong nguyên phân?","o":["Kì đầu, kì sau, kì cuối, kì giữa.","Kì sau, kì giữa, kì đầu, kì cuối.","Kì đầu, kì giữa, kì sau, kì cuối.","Kì giữa, kì sau, kì đầu, kì cuối."],"a":2},{"q":"Trong nguyên phân, các NST kép tập trung thành một hàng trên mặt phẳng xích đạo của thoi phân bào diễn ra ở","o":["kì đầu.","kì giữa.","kì sau.","kì cuối."],"a":1},{"q":"Qua quá trình nguyễn phân, từ 1 tế bào mẹ có bộ NST 2n tạo ra bao nhiêu tế bào con, mỗi tế bào con có bộ NST như thế nào?","o":["Tạo ra 1 tế bào con, mỗi tế bào con có bộ NST n.","Tạo ra 2 tế bào con, mỗi tế bào con có bộ NST 2n.","Tạo ra 1 tế bào con, mỗi tế bào con có bộ NST 2n.","Tạo ra 2 tế bào con, mỗi tế bào con có bộ NST n."],"a":1},{"q":"Trong nguyên phân, tế bào động vật phân chia tế bào chất bằng cách","o":["tạo vách ngăn ở mặt phẳng xích đạo.","kéo dài màng tế bào.","màng tế bào co thắt lại ở giữa tế bào.","tạo vách ngăn và kéo dài thành tế bào"],"a":2},{"q":"Trong nguyên phân, tế bào thực vật phân chia tế bào chất bằng cách","o":["tạo vách ngăn ở mặt phẳng xích đạo.","kéo dài màng tế bào.","màng tế bào co thắt lại ở giữa tế bào.","tạo vách ngăn và kéo dài thành tế bào"],"a":0},{"q":"Nhiễm sắc thể co xoắn cực đại có hình thái đặc trưng và dễ quan sát nhất vào :","o":["Kỳ giữa.","Kỳ cuối.","Kỳ sau.","Kỳ đầu."],"a":0},{"q":"Kết quả của giảm phân là từ 1 tế bào mẹ (2n) tạo ra","o":["2 tế bào con có bộ NST n.","2 tế bào con có bộ NST 2n.","4 tế bào con có bộ NST n.","4 tế bào con có bộ NST 2n."],"a":2},{"q":"Trong quá trình nguyên phân, nhiễm sắc tử tách nhau ở tâm động và di chuyển về 2 cực của tế bào ở","o":["kì đầu.","kì giữa.","ki sau.","kì cuối."],"a":2},{"q":"Sự tiếp hợp của các cặp NST kép tương đồng xảy ra trong kì nào của giảm phân?","o":["Kì đầu của giảm phân I.","Kì giữa của giảm phân II.","Kì đầu của giảm phân II.","Kì giữa của giảm phân I."],"a":0},{"q":"Cho các dữ kiện sau: 1. Các NST kép dần co xoán 2. Màng nhân và nhân con dần tiêu biến 3. Màng nhân và nhân con xuất hiện 4. Thoi phân bào dần xuất hiện 6. Các nhiễm sắc tử tách nhau ra và di chuyển trên thoi phân bảo về 2 cực của tế bào. Các sự kiện diễn ra trong kì đầu của nguyên phân là","o":["(1), (2), (6).","(1), (2), (4).","(1), (2), (3).","(2), (4), (5)."],"a":1},{"q":"Trong quá trình nguyên phân, NST tồn tại ở trạng thái kép ở những kì nào sau đây?","o":["kì đầu và kì giữa.","kì giữa và kì sau.","kì sau và kì cuối.","kì đầu và kì cuối."],"a":0},{"q":"Mỗi tế bào sinh trứng sau giảm phân tạo nên","o":["4 trứng.","2 trứng và 2 thể định hướng.","1 trứng và 3 thể định hướng.","3 trứng và 1 thể định hướng."],"a":2},{"q":"Cho các dữ kiện sau: 1. Các NST kép dần co xoán 2. Màng nhân và nhân con dần tiêu biến 3. Màng nhân và nhân con xuất hiện 4. Thoi phân bào dần xuất hiện 6. Các nhiễm sắc tử tách nhau ra và di chuyển trên thoi phân bảo về 2 cực của tế bào. Các sự kiện diễn ra trong kì đầu của nguyên phân là","o":["(1), (2), (6).","(1), (2), (4).","(1), (2), (3).","(2), (4), (5)."],"a":1},{"q":"Ý nghĩa của quá trình nguyên phân","o":["Thực hiện chức năng sinh sản, sinh trưởng, tái sinh các mô và các bộ phận bị tổn thương.","Truyền đạt, duy trì ổn định bộ NST 2n đặc trưng của loài sinh sản hữu tính qua các thế hệ.","Tăng số lượng tế bào trong thời gian ngắn.","Giúp cho quá trình sinh trưởng và phát triển của cơ thể."],"a":0},{"q":"Ý nghĩa của quá trình giảm phân là","o":["Hình thành giao tử có bộ NST n, tạo cơ sở cho quá trình thụ tinh.","Tạo nên nhiều tế bào đơn bội cho cơ thể.","Giảm bộ NST trong tế bào.","Giúp cho cơ thể tạo thế hệ mới."],"a":0},{"q":"Sự khác nhau trong quá trình phân chia tế bào chất ở tế bào động vật và thực vật là do","o":["tế bào động vật có kích thước nhỏ.","tế bào động vật có nhiều lysosome.","tế bào thực vật có thành cellulose.","tế bào thực vật có không bào lớn."],"a":2},{"q":"Cho các yếu tố sau: (1) Sóng điện thoại di động. (2) Chất dioxin. (3) Chế độ dinh dưỡng thiếu kẽm. (4) Bất thường về cấu trúc nhiễm sắc thể. Số yếu tố ảnh hưởng đến quá trình giảm phân tạo giao tử ở nam giới là","o":["1.","2.","3.","4."],"a":3},{"q":"Điểm giống nhau gữa quá trình nguyên phân và quá trình giảm phân là gì?","o":["Gồm 2 lần phân bào.","Xảy ra ở tế bào hợp tử.","Xảy ra ở tế bào sinh dục.","Nhiễm sắc thể nhân đôi một lần."],"a":3},{"q":"Sau giảm phân số lượng NST ở tế bào con giảm đi một nửa vì","o":["Ở lần phân bào II không có sự tự nhân đôi của NST.","Ở lần phân bào II có sự phân li của cặp NST kép tương đồng.","Có 2 lần phân bào liên tiếp.","Ở kì cuối phân bào I có 2 tế bào con mang n NST kép."],"a":0},{"q":"Sự kiện quan trọng nhất của giảm phân để phân biệt với nguyên phân về mặt di truyền học là","o":["Phân li NST.","Trao đổi chéo NST.","Giãn xoắn và co xoắn của NST.","Kiểu tập trung của NST ở kì giữa của giảm phân I."],"a":3},{"q":"Hiện tượng các nhiễm sắc thể kép co xoắn trong nguyên phân có ý nghĩa nào sau đây?","o":["Tạo thuận lợi cho sự phân li của nhiễm sắc thể.","Tạo thuận lợi cho sự nhân đôi của nhiễm sắc thể.","Tạo thuận lợi cho sự tiếp hợp của nhiễm sắc thể.","Tạo thuận lợi cho sự trao đổi chéo của nhiễm sắc thể."],"a":0},{"q":"Hiện tượng các nhiễm sắc thể dãn xoắn trong nguyên phân có ý nghĩa nào sau đây?","o":["Tạo thuận lợi cho sự phân li và tổ hợp nhiễm sắc thể.","Tạo thuận lợi cho sự nhân đôi DNA và nhiễm sắc thể.","Tạo thuận lợi cho sự tiếp hợp của nhiễm sắc thể.","Tạo thuận lợi cho sự trao đổi chéo của nhiễm sắc thể."],"a":1},{"q":"Ở vi khuẩn và tảo, việc tổng hợp tinh bột và glycogen cần hợp chất mở đầu là","o":["Glucose.","ATP.","ADP-Glucose.","ATP-Glucose."],"a":2},{"q":"Phương trình tổng hợp carbohydrate ở vi sinh vật nào sau đây là đúng?","o":["[Glucose]_{n+1} + [ADP-glucose] → [Glucose]_n + ADP.","[Glucose]_n + ADP → [Glucose]_{n+1} + [ADP-glucose].","[Glucose]_n + [ADP-glucose] → [Glucose]_{n+1} + ADP.","[Glucose]_{n+1} + ADP → [Glucose]_n + [ADP-glucose]."],"a":2},{"q":"Trong quá trình tổng hợp carbohydrate, các phân tử polysaccharide được tạo ra nhờ sự liên kết các phân tử glucose bằng liên kết","o":["glycosidic.","peptide.","ion.","liên kết hidrogen."],"a":0},{"q":"Phát biểu nào sau đây là sai khi nói về sự tổng hợp protein của vi sinh vật?","o":["Vi sinh vật có khả năng tự tổng hợp các loại amino acid.","Vi sinh vật có khả năng tổng hợp protein.","Protein tổng hợp được khi liên kết các amino acid với nhau bằng liên kết glycosid.","Phương trình tổng hợp protein là: (Amino acid)_n → Protein."],"a":2},{"q":"Vi sinh vật tổng hợp lipid bằng cách","o":["liên kết glycerol và glutamic acid.","liên kết lysine và acid béo.","liên kết glycerol và acid béo.","liên kết lysine và glutamic acid."],"a":2},{"q":"Phát biểu nào sau đây là Đúng khi nói về quá trình lên men của vi sinh vật.","o":["Quá trình lên men thực chất là quá trình phân giải protein của vi sinh vật.","Trong quá trình lên men lactic có sự tham gia của nấm men rượu.","Quá trình lên men của vi khuẩn lactic đồng hình sinh ra nhiều chất hơn so với quá trình lên men của vi khuẩn lactic dị hình.","Sản phẩm chính yếu của quá trình lên men rượu là ethanol."],"a":3},{"q":"Đường đơn được tạo ra sau quá trình phân giải các hợp chất carbohydrate ở vi sinh vật được chúng hấp thụ và phân giải theo con đường (1) hiếu khí. (2) kị khí. (3) lên men. Trong các con đường trên, con đường đúng là","o":["lên men.","hiếu khí và kị khí.","hiếu khí và lên men.","hiếu khí, kị khí hoặc lên men."],"a":3},{"q":"Sản phẩm nào sau đây luôn xuất hiện sau quá trình lên men lactic?","o":["CO_2.","Ethanol.","Lactic acid.","Acetic acid."],"a":2},{"q":"Công nghệ vi sinh vật là lĩnh vực","o":["nghiên cứu, ứng dụng vi sinh vật trong sản xuất, chế biến sản phẩm phục vụ đời sống con người.","nghiên cứu, ứng dụng vi sinh vật trong sản xuất, chế biến các sản phẩm xử lí ô nhiễm môi trường.","nghiên cứu, ứng dụng vi sinh vật trong sản xuất, chế biến các sản phẩm thuốc chữa bệnh động vật.","nghiên cứu, ứng dụng vi sinh vật trong sản xuất, chế biến các loại thực phẩm giàu giá trị dinh dưỡng."],"a":0},{"q":"Lĩnh vực nào sau đây ít có sự liên quan đến công nghệ vi sinh vật?","o":["Y học.","Môi trường.","Công nghệ thực phẩm.","Công nghệ ô tô."],"a":3},{"q":"Hoạt động nào sau đây là ứng dụng của quá trình phân giải ở vi sinh vật?","o":["Sản xuất các chất xúc tác sinh học.","Sản xuất sinh khối.","Sản xuất Bột giặt sinh học.","Sản xuất amino acid."],"a":2},{"q":"Ví dụ nào sau đây nói về ứng dụng đặc điểm quá trình phân giải các chất của vi sinh vật?","o":["Sản xuất protein đơn bào.","Sản xuất acid amin.","Nước mắm.","Sản xuất các chất xúc tác sinh học."],"a":2},{"q":"Xử lý nước thải là ứng dụng của công nghệ vi sinh vật trong","o":["y học.","nông nghiệp.","bảo vệ môi trường.","sinh hoạt."],"a":2},{"q":"Xử lý mùi hôi trong chăn nuôi là ứng dụng của chế phẩm vi sinh vật trong","o":["sinh hoạt.","nông nghiệp.","công nghiệp.","môi trường."],"a":1},{"q":"Thành tựu nào sau đây là ứng dụng của công nghệ vi sinh vật trong nông nghiệp?","o":["Kháng sinh.","Dưa muối.","Nước tương.","Phân bón."],"a":3},{"q":"Bón phân vi sinh vật lâu thường xuyên thì","o":["không gây hại cho đất.","đất sẽ bị thoái hóa.","đất sẽ bị bạc màu.","khiến kết cấu đất kém bền."],"a":0},{"q":"Tên nào dưới đây không phải là phân bón vi sinh?","o":["Phân vi sinh cố định đạm.","Phân siêu lân organic.","Phân Superphosphate.","Phân vi sinh phân giải cellulose."],"a":2},{"q":"Dựa vào đặc điểm nào của vi sinh vật người ta sử dụng chúng để xử lí ô nhiễm môi trường?","o":["Vi sinh vật có khả năng phân giải các chất phức tạp.","Khả năng sinh trưởng và sinh sản nhanh.","Khả năng phân bố và thích nghi cao.","Khả năng sống trong những môi trường cực đoan."],"a":0},{"q":"Sản xuất men vi sinh là ứng dụng của công nghệ vi sinh vật trong lĩnh vực nào?","o":["Trồng trọt.","Dược học.","Chăn nuôi.","Thủy sản."],"a":2},{"q":"Đâu là ứng dụng công nghệ vi sinh trong bảo vệ môi trường và xử lí chất thải trồng trọt?","o":["Ủ chua phụ phẩm trồng trọt.","Ủ men làm sữa chua.","Bón phân hóa học cho cây trồng.","Trồng xen canh cây họ đậu."],"a":0},{"q":"Ứng dụng nào sau đây là của công nghệ vi sinh vật?","o":["Nhân giống vô tính cừu Dolly.","Hồ (bể) nuôi cá cảnh thủy sinh.","Hoa lan chiết.","Sản xuất ra giống dưa không hạt"],"a":1},{"q":"Công nghệ vi sinh vật là gì?","o":["Là công nghệ sử dụng vi sinh vật và hoặc các dẫn xuất để tạo ra sản phẩm phục vụ cho đời sống con người.","Là lĩnh vực quan trọng của công nghệ tế bào.","Là công nghệ sử dụng vi sinh vật và các chất hóa học để tạo ra sản phẩm phục vụ cho đời sống con người.","Là công nghệ sử dụng virus và các chất hóa học để tạo ra sản phẩm phục vụ cho đời sống con người."],"a":0},{"q":"Sản phẩm tạo ra từ công nghệ vi sinh vật có đặc điểm như thế nào?","o":["An toàn, thân thiện với môi trường, giá thành cao, hiệu quả lâu dài.","Gây ô nhiễm môi trường, giá thành rẻ, hiệu quả tức thời.","Gây hại cho người sử dụng nên giá thành rẻ, hiệu quả lâu dài.","An toàn, thân thiện với môi trường, giá thành rẻ, hiệu quả lâu dài."],"a":3},{"q":"Cơ sở khoa học của việc ứng dụng công nghệ vi sinh vật là gì?","o":["Dựa trên đặc điểm các chất vi sinh vật như: kích thước lớn, sinh trưởng, phát triển nhanh,...","Dựa trên đặc điểm các chất vi sinh vật như: sinh trưởng, phát triển nhanh, chỉ sống được ở một môi trường duy nhất.","Dựa trên đặc điểm các chất vi sinh vật như: kích thước nhỏ, sinh trưởng, phát triển nhanh,...","Dựa trên đặc điểm các chế phẩm hóa học để sản xuất các loại phân bón."],"a":2},{"q":"Vi sinh vật có những đặc điểm gì mà được dùng để sản xuất các sản phẩm phục vụ đời sống con người?","o":["Kích thước lớn, dễ quan sát.","Thời gian sinh trưởng, phát triển chậm.","Chỉ sống được ở một môi trường.","Có hình thức dinh dưỡng đa dạng."],"a":3},{"q":"Cho hình ảnh dưới đây về thuốc trừ sâu sinh học\n![Description: Graphical user interface, text, applicationDescription automatically generated](media/image1.png){width=\"2.9895833333333335in\" height=\"1.6805555555555556in\"}\n\nNguồn ảnh: Sách giáo khoa Sinh học 10 -- Chân trời sáng tạo.\n\nCó bao nhiêu phát biểu sau đây đúng?\n\nI. Thuốc trừ sâu sinh học được sản xuất từ vi sinh vật.\n\nII. Thuốc trừ sâu sinh học là chế phẩm dùng để diệt trừ vi sinh vật.\n\nIII. Thuốc trừ sâu sinh học ảnh hưởng tốt đến môi trường hơn so với thuốc trừ sâu hóa học.\n\nIV. Thuốc trừ sâu sinh học là một ứng dụng của vi sinh vật trong y học.","o":["1.","2.","3.","4."],"a":1},{"q":"Cho các đặc điểm sau:\n\nI. Có kích thước hiển vi.\n\nII. Tốc độ trao đổi chất với môi trường nhanh.\n\nIII. Sinh trưởng và sinh sản nhanh.\n\nIV. Hình thức dinh dưỡng đa dạng.\n\nCó bao nhiêu đặc điểm trên là cơ sở khoa học của công nghệ vi sinh vật?","o":["1.","2.","3.","4."],"a":3}];
+
+  let quiz = [], current = 0, answers = [], score = 0;
+  const LETTERS = ['A','B','C','D','E','F'];
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function loadSample() {
+    document.getElementById('json-input').value = JSON.stringify(SAMPLE, null, 2);
+  }
+
+  function startQuiz() {
+    const raw = document.getElementById('json-input').value.trim();
+    const err = document.getElementById('error-msg');
+    try {
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data) || data.length === 0) throw new Error();
+      data.forEach(item => {
+        if (!item.q || !Array.isArray(item.o) || item.o.length < 2 || typeof item.a !== 'number') throw new Error();
+      });
+      quiz = data;
+      answers = new Array(quiz.length).fill(null);
+      score = 0;
+      current = 0;
+      err.classList.remove('show');
+      document.getElementById('q-total').textContent = quiz.length;
+      renderQuestion();
+      showScreen('screen-quiz');
+    } catch {
+      err.classList.add('show');
+    }
+  }
+
+  function renderQuestion() {
+    const q = quiz[current];
+    document.getElementById('q-current').textContent = current + 1;
+    document.getElementById('q-num').textContent = 'CÂU ' + String(current + 1).padStart(2,'0');
+    document.getElementById('q-text').textContent = q.q;
+
+    const pct = ((current) / quiz.length) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+
+    const list = document.getElementById('options-list');
+    list.innerHTML = '';
+    const chosen = answers[current];
+
+    q.o.forEach((opt, i) => {
+      const el = document.createElement('div');
+      el.className = 'option-item';
+      if (chosen !== null) el.classList.add('locked');
+
+      if (chosen !== null) {
+        if (i === q.a) el.classList.add('correct');
+        else if (i === chosen && chosen !== q.a) el.classList.add('wrong');
+      } else if (i === chosen) {
+        el.classList.add('selected');
+      }
+
+      el.innerHTML = `
+        <div class="option-letter">${LETTERS[i]}</div>
+        <div class="option-text">${opt}</div>
+        <div class="option-icon">${chosen !== null ? (i === q.a ? '✓' : (i === chosen ? '✗' : '')) : ''}</div>
+      `;
+
+      if (chosen === null) {
+        el.onclick = () => selectAnswer(i);
+      }
+      list.appendChild(el);
+    });
+
+    document.getElementById('btn-prev').style.visibility = current > 0 ? 'visible' : 'hidden';
+    document.getElementById('btn-next').textContent = current === quiz.length - 1 ? 'Nộp bài ✓' : 'Tiếp →';
+  }
+
+  function selectAnswer(i) {
+    if (answers[current] !== null) return;
+    answers[current] = i;
+    if (i === quiz[current].a) {
+      score++;
+      document.getElementById('q-score').textContent = score;
+    }
+    renderQuestion();
+  }
+
+  function nextQuestion() {
+    if (answers[current] === null) {
+      // Shake the options
+      document.getElementById('options-list').style.animation = 'none';
+      setTimeout(() => {
+        const list = document.getElementById('options-list');
+        list.style.animation = 'shake .4s ease';
+      }, 10);
+      return;
+    }
+    if (current < quiz.length - 1) {
+      current++;
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }
+
+  function prevQuestion() {
+    if (current > 0) { current--; renderQuestion(); }
+  }
+
+  function showResult() {
+    const total = quiz.length;
+    const pct = score / total;
+    document.getElementById('progress-fill').style.width = '100%';
+
+    document.getElementById('final-score').textContent = `${score}/${total}`;
+
+    const circumference = 364.4;
+    const offset = circumference - pct * circumference;
+    setTimeout(() => {
+      document.getElementById('score-circle').style.transition = 'stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)';
+      document.getElementById('score-circle').style.strokeDashoffset = offset;
+    }, 200);
+
+    let title, sub;
+    if (pct === 1) { title = '🏆 Xuất sắc!'; sub = 'Bạn trả lời đúng tất cả câu hỏi!'; }
+    else if (pct >= 0.8) { title = '🎉 Rất giỏi!'; sub = `Bạn đã làm đúng ${score} / ${total} câu. Tuyệt vời!`; }
+    else if (pct >= 0.6) { title = '👍 Khá tốt!'; sub = `Đúng ${score} / ${total} câu. Cố gắng thêm nhé!`; }
+    else if (pct >= 0.4) { title = '📚 Cần ôn tập!'; sub = `Chỉ đúng ${score} / ${total} câu. Hãy xem lại đáp án.`; }
+    else { title = '😅 Chưa đạt!'; sub = `Đúng ${score} / ${total} câu. Đừng nản, thử lại nào!`; }
+
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-sub').textContent = sub;
+
+    if (pct >= 0.6) launchConfetti();
+
+    buildReview();
+    showScreen('screen-result');
+  }
+
+  function buildReview() {
+    const list = document.getElementById('review-list');
+    list.innerHTML = '';
+    quiz.forEach((q, i) => {
+      const userAns = answers[i];
+      const isCorrect = userAns === q.a;
+      const card = document.createElement('div');
+      card.className = 'review-card ' + (isCorrect ? 'correct-card' : 'wrong-card');
+
+      let answerHtml = '';
+      q.o.forEach((opt, j) => {
+        let cls = '';
+        let tag = '';
+        if (j === q.a) { cls = 'correct-ans'; tag = '✓ Đúng'; }
+        else if (j === userAns && !isCorrect) { cls = 'wrong-ans'; tag = '✗ Bạn chọn'; }
+        else { cls = 'neutral-ans'; }
+        if (cls !== 'neutral-ans') {
+          answerHtml += `<div class="review-answer ${cls}">
+            <span class="ans-tag">${LETTERS[j]}. ${tag}</span>
+            <span>${opt}</span>
+          </div>`;
+        }
+      });
+
+      // If user got it right, only show the correct answer
+      if (isCorrect) {
+        const j = q.a;
+        answerHtml = `<div class="review-answer correct-ans">
+          <span class="ans-tag">${LETTERS[j]}. ✓ Đúng</span>
+          <span>${q.o[j]}</span>
+        </div>`;
+      }
+
+      card.innerHTML = `
+        <div class="review-card-header">
+          <div class="review-badge ${isCorrect ? 'ok' : 'no'}">${isCorrect ? '✓' : '✗'}</div>
+          <div class="review-q">Câu ${i+1}: ${q.q}</div>
+        </div>
+        <div class="review-answers">${answerHtml}</div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  let reviewVisible = false;
+  function toggleReview() {
+    reviewVisible = !reviewVisible;
+    document.getElementById('review-section').style.display = reviewVisible ? 'block' : 'none';
+    document.getElementById('toggle-review-btn').textContent = reviewVisible ? 'Ẩn đáp án ▴' : 'Xem đáp án ▾';
+  }
+
+  function resetQuiz() {
+    reviewVisible = false;
+    document.getElementById('review-section').style.display = 'none';
+    document.getElementById('toggle-review-btn').textContent = 'Xem đáp án ▾';
+    document.getElementById('q-score').textContent = '0';
+    document.getElementById('score-circle').style.strokeDashoffset = '364.4';
+    document.getElementById('score-circle').style.transition = 'none';
+    showScreen('screen-setup');
+  }
+
+  function launchConfetti() {
+    const colors = ['#7c6dfa','#fa6d8a','#4ade80','#facc15','#60a5fa'];
+    for (let i = 0; i < 60; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.width = (8 + Math.random() * 8) + 'px';
+        el.style.height = (8 + Math.random() * 8) + 'px';
+        el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+        el.style.animationDelay = '0s';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 4000);
+      }, i * 40);
+    }
+  }
+
+  // Shake keyframe via JS (no style tag manipulation needed)
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)}
+      60%{transform:translateX(-5px)}
+      80%{transform:translateX(5px)}
+    }
+  `;
+  document.head.appendChild(style);
+</script>
+</body>
+</html>
