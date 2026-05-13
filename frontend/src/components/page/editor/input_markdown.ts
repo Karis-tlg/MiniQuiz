@@ -92,7 +92,7 @@ export class ElementEditorInputMarkdown extends LitElement {
         return html`
             <div class="w-full">
                 <textarea ${ref(this.textareaRef)} name="input_markdown" style="min-height: ${this.minHeight}rem" @input="${(event: InputEvent) => this.auto_resize(event)}" @blur="${() => { this.render_markdown(); this.leave_textarea() }}" class="hidden w-full resize-none p-4 overflow-y-hidden overflow-x-auto rounded bg-slate-800 border border-slate-700 focus:border-default-primary outline-none transition"></textarea>
-                <div ${ref(this.previewRef)} style="min-height: ${this.minHeight}rem" @click="${() => this.toggle_textarea()}" id="preview" class="markdown-body p-4 bg-slate-800 border border-slate-700 rounded"></div>
+                <div ${ref(this.previewRef)} style="min-height: ${this.minHeight}rem" @click="${() => this.toggle_textarea()}" class="markdown-body p-4 bg-slate-800 border border-slate-700 rounded"></div>
             </div>
         `
     }

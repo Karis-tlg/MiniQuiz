@@ -4,7 +4,7 @@ import { createRef, ref, type Ref } from "lit/directives/ref.js"
 import "../components/icon"
 import "../components/navbar"
 import "../components/notify"
-import { ElementSidebar } from"../components/page/editor/sidebar"
+import { ElementEditorSidebar } from"../components/page/editor/sidebar"
 import { ElementEditorMultiChoice } from "../components/page/editor/questions/multi_choice"
 import { getEditorData, updateQuiz } from "../apis/quiz"
 import { hasUserLogged } from "../apis/user"
@@ -13,7 +13,7 @@ import { ImagesManager } from "../utils/images-manager"
 @customElement("page-editor")
 export class PageEditor extends LitElement {
     loadingRef: Ref<HTMLElement> = createRef()
-    sidebarRef: Ref<ElementSidebar> = createRef()
+    sidebarRef: Ref<ElementEditorSidebar> = createRef()
     mainRef: Ref<HTMLElement> = createRef()
     questionsRef: Ref<HTMLElement> = createRef()
     private observer?: MutationObserver
@@ -159,7 +159,9 @@ export class PageEditor extends LitElement {
             </div>
 
             <element-navbar href="#">
-                <button slot="left" @click=${this.toggle_sidebar} class="lg:hidden text-lg text-default-text hover:text-indigo-500 transition"><i class="fa-solid fa-bars"></i></button>
+                <button slot="left" @click=${this.toggle_sidebar} class="lg:hidden text-lg text-default-text hover:text-indigo-500 transition">
+                    <element-icon icon="menu"></element-icon>
+                </button>
                 <div slot="right" class="flex items-center gap-x-3">
                     <button @click="${this.clear_quiz}" class="block px-3 py-1 bg-rose-500 hover:bg-rose-700 rounded-lg transition"><element-icon icon="trash"></element-icon> Đặt lại</button>
                     <button @click="${this.save}" class="block px-3 py-1 bg-indigo-500 hover:bg-indigo-700 rounded-lg transition"><element-icon icon="save"></element-icon> Lưu</button>
@@ -169,7 +171,7 @@ export class PageEditor extends LitElement {
             <element-notify-container class="fixed block top-16 w-full md:w-3/4 lg:w-2/3 right-1/2 translate-x-1/2 z-120"></element-notify-container>
 
             <div class="pt-16">
-                <element-sidebar ${ref(this.sidebarRef)}></element-sidebar>
+                <element-editor-sidebar ${ref(this.sidebarRef)}></element-editor-sidebar>
                 <main ${ref(this.mainRef)} class="md:ml-80 lg:ml-80 p-4">
                     <h1 class="text-2xl font-bold text-default-text mb-4">Danh sách câu hỏi</h1>
                     <div ${ref(this.questionsRef)} class="grid grid-cols-1 gap-4"></div>

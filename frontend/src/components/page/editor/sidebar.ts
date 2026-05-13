@@ -2,8 +2,8 @@ import { LitElement, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
 import { createRef, ref, type Ref } from "lit/directives/ref.js"
 
-@customElement("element-sidebar")
-export class ElementSidebar extends LitElement {
+@customElement("element-editor-sidebar")
+export class ElementEditorSidebar extends LitElement {
     @state() private close = !window.matchMedia('(min-width: 768px)').matches
     sidebarRef: Ref<HTMLElement> = createRef()
     titleRef: Ref<HTMLInputElement> = createRef()
@@ -92,5 +92,11 @@ export class ElementSidebar extends LitElement {
                 </nav>
             </aside>
         `
+    }
+}
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'element-editor-sidebar': ElementEditorSidebar
     }
 }

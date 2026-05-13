@@ -34,3 +34,15 @@ export async function getEditorData(quizId: string) {
     const data = await fetch(`/api/quizzes/${quizId}/editor`, { credentials: 'include' }).then(res => res.json())
     return data.data
 }
+
+export async function submitQuiz(quizId: string, data: any) {
+    try {
+        const result = await fetch(`/api/quizzes/${quizId}/submit`, { method: 'POST', credentials: 'include', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } }).then(res => res.json())
+        return result
+    } catch (error: any) {
+        if (error.response.status === 422) {
+            throw new Error(error.response.data.detail)
+        }
+        throw error
+    }
+}

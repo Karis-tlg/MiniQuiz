@@ -2,7 +2,7 @@ from __future__ import annotations
 import random
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, model_validator
 from typing import Dict, List, Literal, Callable, Type, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from bson.errors import InvalidId
 from pydantic_core import CoreSchema, core_schema
@@ -102,6 +102,7 @@ class QuizQuestionLock(BaseModel):
     options: List[QuizOption]
 
 class QuizLock(BaseModel):
+    id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
     title: str
     randomize: QuizRandomize
     questions: List[QuizQuestionLock]
@@ -115,3 +116,7 @@ class QuizLock(BaseModel):
             for question in self.questions:
                 random.shuffle(question.options)
         return self
+
+class QuizSubmit(BaseModel):
+    quiz_id_version: PydanticObjectId = Field(default_factory=PydanticObjectId)
+    answers: List

@@ -4,7 +4,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, File, Form, UploadFile, Request, HTTPException
 
 from ..utils.database import Database
-from ..utils.models import Quiz, QuizLock, QuizData, QuizRandomize, User
+from ..utils.models import Quiz, QuizLock, QuizData, QuizRandomize, QuizSubmit, User
 from ..utils.auth import auth_manager
 from ..utils.limiter import limiter
 from ..utils.storage import Storage
@@ -68,6 +68,39 @@ async def quiz_quiz(request: Request, quiz_id: str, user: Annotated[User, Depend
         raise HTTPException(status_code=404, detail="Quiz not found")
     quiz = QuizLock(**quiz_data)
     return {"status": "success", "data": quiz}
+
+@router.post("/{quiz_id}/submit")
+@limiter.limit("10/10minute")
+async def submit_quiz(request: Request, quiz_id: str, data: QuizSubmit, user: Annotated[User, Depends(auth_manager.get_current_user)]):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    db: Database = request.app.state.db
+    if await db.quizzes.count_documents({"_id": ObjectId(data.quiz_id_version), "quiz_id": ObjectId(quiz_id)}) == 0:
+        raise HTTPException(status_code=404, detail="Something went wrong")
+    insert = await db.history.insert_one({"quiz_id": ObjectId(quiz_id), "quiz_id_version": data.quiz_id_version, "author": user.id, "answers": data.answers, "createAt": datetime.now(timezone.utc)})
+    return {"status": "success", "message": "Quiz submitted", "result_id": str(insert.inserted_id)}
+
+@router.get("/{quiz_id}/result")
+@limiter.limit("60/10minute")
+async def quiz_result(request: Request, history_id: str, user: Annotated[User, Depends(auth_manager.get_current_user)]):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    db: Database = request.app.state.db
+    history = await db.history.find_one({"_id": ObjectId(history_id), "author": user.id})
+    if not history:
+        raise HTTPException(status_code=404, detail="Result not found")
+    quiz = await db.quizzes.find_one({"_id": ObjectId(history["quiz_id_version"])})
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Something went wrong")
+    # Return result
+    find_question_by_id = lambda qid: [q for q in quiz["questions"] if q["id"] == qid][0]
+    total_true = 0
+    for answer in history["answers"]:
+        question = find_question_by_id(answer["id"])
+        if answer.get("answer") == question["answer"]:
+            total_true += 1
+    return {"status": "success", "data": {"total_true": total_true, "total": len(quiz["questions"])}}
+
 
 @router.get("/{quiz_id}/editor")
 @limiter.limit("60/10minute")
