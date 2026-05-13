@@ -24,7 +24,8 @@ export default defineConfig({
                 dashboard: 'dashboard.html',
                 quiz: 'quiz.html',
                 editor: 'editor.html',
-                legal: 'legal.html'
+                legal: 'legal.html',
+                temp: 'temp.html'
             }
         }
     }
