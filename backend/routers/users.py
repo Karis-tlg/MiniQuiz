@@ -10,7 +10,11 @@ from ..utils.mail import MailClient
 from ..utils.models import UserResponse, UserCreate, UserLogin, User
 from ..utils.database import Database
 
-APP_URL = os.environ.get("APP_URL", "https://miniquiz.xyz").rstrip("/")
+_vercel_project_url = os.environ.get("VERCEL_PROJECT_PRODUCTION_URL")
+APP_URL = (
+    os.environ.get("APP_URL")
+    or (f"https://{_vercel_project_url}" if _vercel_project_url else "https://miniquiz.xyz")
+).rstrip("/")
 
 router = APIRouter(
     prefix="/api/user",
