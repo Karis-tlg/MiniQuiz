@@ -11,7 +11,7 @@ class Auth:
     def __init__(self):
         self.password_hash = PasswordHash.recommended()
         self.SECRET_KEY = os.environ.get("SECRET_KEY")
-        self.ALGORITHM = os.environ.get("ALGORITHM")
+        self.ALGORITHM = os.environ.get("ALGORITHM", "HS256")
         self.oauthlib = OAuth()
 
         self.oauthlib.register(

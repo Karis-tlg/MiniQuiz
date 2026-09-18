@@ -10,6 +10,8 @@ from ..utils.mail import MailClient
 from ..utils.models import UserResponse, UserCreate, UserLogin, User
 from ..utils.database import Database
 
+APP_URL = os.environ.get("APP_URL", "https://miniquiz.xyz").rstrip("/")
+
 router = APIRouter(
     prefix="/api/user",
     tags=["Auth"],
@@ -47,7 +49,7 @@ async def create_user(request: Request, user: UserCreate, turnstile_token: str):
     user_data = user.model_dump(by_alias=True)
     user_data["type"] = "create_user"
     verify_token = auth_manager.create_access_token(user_data, timedelta(minutes=30))
-    await mail.send_mail("Xác minh tài khoản", user.email.lower(), 6002, {"username": user.username, "url": f"https://miniquiz.xyz/api/auth/verify?token={verify_token}"})
+    await mail.send_mail("Xác minh tài khoản", user.email.lower(), 6002, {"username": user.username, "url": f"{APP_URL}/api/user/verify?token={verify_token}"})
     return {"status": "success", "message": "Vui lòng xác minh email bằng liên kết đã được gửi tới hòm thư"}
 
 @router.get("/verify")
@@ -96,7 +98,7 @@ async def forgot_password(request: Request, turnstile_token: str, email: str):
     if user_db is None:
         raise HTTPException(status_code=400, detail="Người dùng không tồn tại")
     verify_token = auth_manager.create_access_token({"type": "reset_password", "email": email}, timedelta(minutes=30))
-    await mail.send_mail("Thay đổi mật khẩu", email, 6008, {"username": user_db["username"], "url": f"https://miniquiz.xyz/api/auth?form=3&token={verify_token}"})
+    await mail.send_mail("Thay đổi mật khẩu", email, 6008, {"username": user_db["username"], "url": f"{APP_URL}/auth?form=3&token={verify_token}"})
     return {"status": "success", "message": "Email đã được gửi tới hòm thư, vui lòng truy cập liên kết trong email để thay đổi mật khẩu"}
 
 @router.post("/reset-password")
@@ -126,12 +128,14 @@ async def delete_user(request: Request, user: Annotated[User, Depends(auth_manag
 @router.get("/discord/login")
 @limiter.limit("30/10minute")
 async def discord_login(request: Request):
-    return await auth_manager.oauthlib.discord.authorize_redirect(request, redirect_uri=os.environ.get("DISCORD_REDIRECT_URI"))
+    redirect_uri = os.environ.get("DISCORD_REDIRECT_URI", f"{APP_URL}/api/user/discord/callback")
+    return await auth_manager.oauthlib.discord.authorize_redirect(request, redirect_uri=redirect_uri)
 
 @router.get("/google/login")
 @limiter.limit("30/10minute")
 async def google_login(request: Request):
-    return await auth_manager.oauthlib.google.authorize_redirect(request, redirect_uri=os.environ.get("GOOGLE_REDIRECT_URI"))
+    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", f"{APP_URL}/api/user/google/callback")
+    return await auth_manager.oauthlib.google.authorize_redirect(request, redirect_uri=redirect_uri)
 
 @router.get("/discord/callback")
 @limiter.limit("60/10minute")
