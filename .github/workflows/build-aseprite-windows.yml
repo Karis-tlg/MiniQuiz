@@ -1,0 +1,81 @@
+name: Build Aseprite Windows x64
+
+on:
+  push:
+    branches:
+      - ci/aseprite-windows-build-20260927
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Aseprite
+        uses: actions/checkout@v7
+        with:
+          repository: aseprite/aseprite
+          submodules: recursive
+          path: aseprite
+
+      - name: Install Ninja
+        uses: aseprite/get-ninja@main
+
+      - name: Setup MSVC x64
+        uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: x64
+
+      - name: Download Skia
+        shell: bash
+        working-directory: aseprite
+        run: |
+          skia_url=$(bash laf/misc/skia-url.sh Release Windows x64 | xargs)
+          skia_file=$(basename "$skia_url")
+          echo "Skia URL: $skia_url"
+          curl --ssl-revoke-best-effort -L -o "$skia_file" "$skia_url"
+          mkdir -p skia
+          unzip -q "$skia_file" -d skia
+
+      - name: Configure
+        shell: bash
+        working-directory: aseprite
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_TESTS=OFF \
+            -DLAF_BACKEND=skia \
+            -DSKIA_DIR="$(realpath skia)" \
+            -DSKIA_LIBRARY_DIR="$(realpath skia/out/Release-x64)"
+
+      - name: Build
+        shell: bash
+        working-directory: aseprite
+        run: |
+          ninja -C build aseprite
+
+      - name: Verify
+        shell: pwsh
+        working-directory: aseprite
+        run: |
+          .\build\bin\aseprite.exe --version
+          .\build\bin\aseprite.exe --help | Select-Object -First 12
+          Get-Item .\build\bin\aseprite.exe | Format-List Name,Length,LastWriteTime
+
+      - name: Save build metadata
+        shell: pwsh
+        working-directory: aseprite
+        run: |
+          $sha = git rev-parse --short HEAD
+          $desc = git describe --tags --always --dirty
+          "commit=$sha" | Out-File -FilePath build\bin\BUILD-INFO.txt -Encoding utf8
+          "describe=$desc" | Out-File -FilePath build\bin\BUILD-INFO.txt -Encoding utf8 -Append
+          "built_on=windows-latest" | Out-File -FilePath build\bin\BUILD-INFO.txt -Encoding utf8 -Append
+
+      - name: Upload Aseprite Windows x64
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aseprite-Windows-x64
+          path: aseprite/build/bin
+          if-no-files-found: error
+          retention-days: 3
